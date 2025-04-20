@@ -405,14 +405,21 @@ auto APU::midiInit() -> void {
 }
 
 auto APU::generateMidi() -> void {
+  // always update latest desired midi state:
+  pulse1.calculateMidi();
+  pulse2.calculateMidi();
+  triangle.calculateMidi();
+  noise.calculateMidi();
+
   // send 1 MIDI message every 0.00076800 sec
   //         each APU cycle is 0.00000056 sec
-  // means we can send one MIDI message every 1369 APU clock cycles:
-  if (midiClocks++ < 1369*16) {
+  // means we can send one MIDI message every 1374 APU clock cycles:
+  if (midiClocks++ < 1374*(4+4+3+2)*2) {
     return;
   }
   midiClocks = 0;
 
+  // emit messages to transition to desired midi state:
   pulse1.generateMidi( midiEmitter );
   pulse2.generateMidi( midiEmitter );
   triangle.generateMidi( midiEmitter );

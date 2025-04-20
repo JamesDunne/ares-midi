@@ -29,18 +29,13 @@ auto APU::Noise::power(bool reset) -> void {
   lfsr = 1;
 }
 
-auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
+auto APU::Noise::calculateMidi() -> void {
   u32 volume = envelope.volume();
 
   if (volume == 0 || length.counter == 0 || period == 0) {
     // silence:
-
-    if (m.noteOn) {
-      // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
-      m.noteOn = 0;
-      m.noteVel = 0;
-    }
+    m.noteOn = 0;
+    m.noteVel = 0;
 
     m.lastPeriod = period;
     return;
@@ -56,6 +51,10 @@ auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
   // midi note:
   u8 kn;
 
+  if (period != m.lastPeriod) {
+    printf("noise: period=%1X\n", period);
+  }
+
   if (period >= 0xB) {
     // bass drum:
     kn = 35 | (period&1);
@@ -65,6 +64,9 @@ auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
   } else if (period >= 0x4) {
     // crash:
     kn = (period&1) ? 49 : 57;
+  } else if (period == 0x1) {
+    // open triangle: (for Solstice)
+    kn = 81;
   } else {
     // closed hi-hit:
     kn = 42;
@@ -75,23 +77,35 @@ auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
     m.noteOn = kn;
     m.noteChan = m.chans[0];
     m.noteVel = v;
-    emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
   } else if (m.noteOn != kn || v > m.noteVel) {
     if (period >= m.lastPeriod) {
       // change note or repeat note if increased velocity:
-      if (m.noteOn != 0) {
-        // note off:
-        emit(0x80 | m.noteChan, m.noteOn, 0x00);
-      }
 
       // note on:
       m.noteOn = kn;
       m.noteChan = m.chans[0];
       m.noteVel = v;
-      emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
     }
   }
 
   m.noteVel = v;
   m.lastPeriod = period;
+}
+
+auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
+  // audible note:
+  if (m.noteOn != m.lastNoteOn) {
+    // note off:
+    emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
+  }
+
+  if (m.noteOn == 0) {
+    goto done;
+  }
+  if (m.noteOn != m.lastNoteOn) {
+    emit(0x90 | m.noteChan, m.noteOn, 96);
+  }
+
+done:
+  m.lastNoteOn = m.noteOn;
 }

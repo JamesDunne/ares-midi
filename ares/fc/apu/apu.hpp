@@ -29,10 +29,16 @@ struct APU : Thread {
     u8  noteVel;
     n14 noteWheel;
 
+    u8  lastNoteOn;
+    u8  lastChan;
+    u8  lastVel;
+    n14 lastWheel;
+
     u2  lastDuty;
     u16 lastPeriod;
 
     u8  chans[4];
+    u8  chanVel[4];
   };
 
   struct Length {
@@ -108,6 +114,7 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    auto calculateMidi() -> void;
     auto generateMidi(MIDIEmitter&) -> void;
     MidiState m;
 
@@ -131,6 +138,7 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    auto calculateMidi() -> void;
     auto generateMidi(MIDIEmitter&) -> void;
     MidiState m;
 
@@ -153,6 +161,7 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    auto calculateMidi() -> void;
     auto generateMidi(MIDIEmitter&) -> void;
     MidiState m;
 

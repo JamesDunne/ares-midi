@@ -32,23 +32,19 @@ auto APU::Triangle::power(bool reset) -> void {
   reloadLinear = 0;
 }
 
-auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
+auto APU::Triangle::calculateMidi() -> void {
+  // velocity (0..127):
+  int v = 96;
+
   if (length.counter == 0 || linearLengthCounter == 0 || period <= 1) {
     // silence:
-
-    if (m.noteOn) {
-      // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
-      m.noteOn = 0;
-      m.noteVel = 0;
-    }
+    m.noteOn = 0;
+    m.noteChan = m.chans[0];
+    m.noteVel = v;
     return;
   }
 
   // audible note:
-
-  // velocity (0..127):
-  int v = 96;
 
   double f = 1'789'773.0 / (32.0 * ((double)period + 1.0));
   // A0 = midi note 21; 27.5Hz
@@ -67,28 +63,33 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
   // pitch bend: (assuming +/- 2 semitone range)
   n14 wheel = 8192 + (b * 4096.0);
 
-  if (!m.noteOn) {
-    // note on:
-    m.noteOn = kn;
-    m.noteChan = m.chans[0];
-    m.noteVel = v;
-    emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
-  } else if (m.noteOn != kn) {
-    if (m.noteOn != 0) {
-      // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
-    }
+  // set desired midi state:
+  m.noteOn = kn;
+  m.noteChan = m.chans[0];
+  m.noteVel = v;
+  m.noteWheel = wheel;
+}
 
-    // note on:
-    m.noteOn = kn;
-    m.noteChan = m.chans[0];
-    m.noteVel = v;
-    emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
+  // audible note:
+  if (m.noteOn != m.lastNoteOn) {
+    // note off:
+    emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
+  }
+
+  if (m.noteOn == 0) {
+    goto done;
+  }
+  if (m.noteOn != m.lastNoteOn) {
+    emit(0x90 | m.noteChan, m.noteOn, 96);
   }
 
   // adjust pitch bend:
-  if (m.noteWheel != wheel) {
-    m.noteWheel = wheel;
+  if (m.noteWheel != m.lastWheel) {
     emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
   }
+
+done:
+  m.lastNoteOn = m.noteOn;
+  m.lastWheel = m.noteWheel;
 }
