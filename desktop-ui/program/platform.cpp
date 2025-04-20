@@ -175,6 +175,11 @@ auto Program::audio(ares::Node::Audio::Stream node) -> void {
   }
 }
 
+auto Program::midi(ares::Node::Audio::MIDI node) -> void {
+  s32 msg = node->readShort();
+  ruby::audio.midiShort(msg);
+}
+
 auto Program::input(ares::Node::Input::Input node) -> void {
   if(!driverSettings.inputDefocusAllow.checked()) {
     if(!ruby::video.fullScreen() && !presentation.focused()) {

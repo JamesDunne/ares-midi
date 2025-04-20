@@ -1,5 +1,6 @@
 find_package(SDL)
 find_package(librashader)
+find_package(PortMidi)
 
 if(XCODE AND WITH_SYSTEM_ZLIB)
   set_target_properties(ruby PROPERTIES OUTPUT_NAME "ruby-but-not-the-scripting-language")
@@ -13,7 +14,7 @@ target_sources(
 # todo address
 target_compile_options(ruby PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unguarded-availability>)
 
-target_sources(ruby PRIVATE audio/openal.cpp audio/sdl.cpp)
+target_sources(ruby PRIVATE audio/openal.cpp audio/sdl.cpp audio/portmidi.cpp)
 
 target_sources(
   ruby
@@ -55,6 +56,12 @@ if(librashader_FOUND)
   )
 endif()
 
+if(PortMidi_FOUND)
+  include_directories(${PortMidi_INCLUDE_DIR})
+  target_link_libraries(ruby PUBLIC ${PortMidi_LIBRARY})
+endif()
+
+
 target_enable_feature(ruby "OpenGL video driver" VIDEO_CGL)
 target_enable_feature(ruby "Metal video driver" VIDEO_METAL)
 target_enable_feature(ruby "OpenAL audio driver" AUDIO_OPENAL)
@@ -67,6 +74,9 @@ if(librashader_FOUND AND ARES_ENABLE_LIBRASHADER)
   target_enable_feature(ruby "librashader Metal runtime" LIBRA_RUNTIME_METAL)
 else()
   target_compile_definitions(ruby PRIVATE LIBRA_RUNTIME_OPENGL LIBRA_RUNTIME_METAL)
+endif()
+if(PortMidi_FOUND)
+  target_enable_feature(ruby "PortMidi MIDI driver" MIDI_PORTMIDI)
 endif()
 target_enable_feature(ruby "Quartz input driver" INPUT_QUARTZ)
 

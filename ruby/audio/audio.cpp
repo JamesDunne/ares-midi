@@ -55,6 +55,14 @@
 #include <ruby/audio/sdl.cpp>
 #endif
 
+#if defined(MIDI_PORTMIDI)
+  #include <ruby/audio/portmidi.cpp>
+#else
+namespace MIDI {
+auto writeShort(s32 msg) -> void {}
+}
+#endif
+
 namespace ruby {
 
 auto Audio::setExclusive(bool exclusive) -> bool {
@@ -159,9 +167,16 @@ auto Audio::output(const f64 samples[]) -> void {
   }
 }
 
+auto Audio::midiShort(s32 msg) -> void {
+  MIDI::writeShort(msg);
+}
+
+
 //
 
 auto Audio::create(string driver) -> bool {
+  MIDI::init();
+
   self.instance.reset();
   if(!driver) driver = optimalDriver();
 

@@ -1,4 +1,5 @@
 #include <fc/fc.hpp>
+#include <math.h>
 
 namespace ares::Famicom {
 
@@ -43,10 +44,46 @@ auto APU::load(Node::Object parent) -> void {
       }
     }
   }
+
+  midi = node->append<Node::Audio::MIDI>("MIDI");
+  midiEmitter = MIDIEmitter(
+    &Core::Audio::MIDI::writeShort,
+    midi.data()
+  );
+
+  u8 dutyPCs[4] = { 81, 82, 80, 87 };
+  for (int n = 0; n < 4; n++) {
+    pulse1.m.chans[n] = n;
+    pulse2.m.chans[n] = n+4;
+
+    midi->delay();
+    midiEmitter(0xC0 | pulse1.m.chans[n], dutyPCs[n], 0);
+    midi->delay();
+    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0x40); // vol
+    midi->delay();
+    midiEmitter(0xB0 | pulse1.m.chans[n], 0x0A, 0x28); // pan
+
+    midi->delay();
+    midiEmitter(0xC0 | pulse2.m.chans[n], dutyPCs[n], 0);
+    midi->delay();
+    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0x40); // vol
+    midi->delay();
+    midiEmitter(0xB0 | pulse2.m.chans[n], 0x0A, 0x58); // pan
+  }
+
+  triangle.m.chans[0] = 8;
+  midi->delay();
+  midiEmitter(0xC0 | triangle.m.chans[0], 39, 0);
+  midi->delay();
+  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x40); // vol
+  midi->delay();
+  midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
 }
 
 auto APU::unload() -> void {
+  midiEmitter.reset();
   node->remove(stream);
+  node->remove(midi);
   stream.reset();
   node.reset();
 }
@@ -63,6 +100,8 @@ auto APU::main() -> void {
   output += dmcTriangleNoiseDAC[dmcOutput][triangleOutput][noiseOutput];
 
   stream->frame(sclamp<16>(output) / 32768.0);
+
+  generateMidi();
 
   tick();
 }
@@ -305,5 +344,11 @@ const n16 APU::dmcPeriodTableNTSC[16] = {
 const n16 APU::dmcPeriodTablePAL[16] = {
   398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98, 78, 66, 50,
 };
+
+auto APU::generateMidi() -> void {
+  pulse1.generateMidi( midiEmitter );
+  pulse2.generateMidi( midiEmitter );
+  triangle.generateMidi( midiEmitter );
+}
 
 }

@@ -1,6 +1,11 @@
 struct APU : Thread {
+  using MIDIEmitter = function<auto (u8 cmd, u8 data1, u8 data2) -> void>;
+
   Node::Object node;
   Node::Audio::Stream stream;
+  Node::Audio::MIDI midi;
+
+  MIDIEmitter midiEmitter;
 
   auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
 
@@ -19,6 +24,15 @@ struct APU : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct MidiState {
+    u8  noteOn;
+    u8  noteChan;
+    u8  noteVel;
+    //n14 wheel;
+
+    u8  chans[4];
+  };
 
   struct Length {
     //length.cpp
@@ -93,6 +107,9 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    auto generateMidi(MIDIEmitter&) -> void;
+    MidiState m;
+
     Length length;
     Envelope envelope;
     Sweep sweep;
@@ -112,6 +129,9 @@ struct APU : Thread {
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    auto generateMidi(MIDIEmitter&) -> void;
+    MidiState m;
 
     Length length;
 
@@ -217,6 +237,8 @@ struct APU : Thread {
   auto clockHalfFrame() -> void;
 
   FrameCounter frame;
+
+  auto generateMidi() -> void;
 
 //unserialized:
   u16 pulseDAC[32];

@@ -15,6 +15,7 @@ namespace ares::Core {
   namespace Audio {
     struct Audio;
     struct Stream;
+    struct MIDI;
   }
   namespace Input {
     struct Input;
@@ -61,6 +62,7 @@ namespace ares::Node {
   namespace Audio {
     using Audio          = shared_pointer<Core::Audio::Audio>;
     using Stream         = shared_pointer<Core::Audio::Stream>;
+    using MIDI           = shared_pointer<Core::Audio::MIDI>;
   }
   namespace Input {
     using Input          = shared_pointer<Core::Input::Input>;
@@ -114,6 +116,7 @@ namespace ares::Core {
   namespace Audio {
     #include <ares/node/audio/audio.hpp>
     #include <ares/node/audio/stream.hpp>
+    #include <ares/node/audio/midi.hpp>
   }
   namespace Input {
     #include <ares/node/input/input.hpp>

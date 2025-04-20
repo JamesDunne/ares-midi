@@ -64,7 +64,7 @@ target_sources(
     ares/node/system.hpp
 )
 
-target_sources(ares PRIVATE ares/node/audio/audio.hpp ares/node/audio/stream.cpp ares/node/audio/stream.hpp)
+target_sources(ares PRIVATE ares/node/audio/audio.hpp ares/node/audio/stream.cpp ares/node/audio/stream.hpp ares/node/audio/midi.hpp ares/node/audio/midi.cpp)
 
 target_sources(ares PRIVATE ares/node/component/component.hpp ares/node/component/real-time-clock.hpp)
 
@@ -279,6 +279,7 @@ set_source_files_properties(
   ares
   ares/debug/debug.cpp
   ares/node/audio/stream.cpp
+  ares/node/audio/midi.cpp
   ares/node/node.cpp
   ares/node/video/screen.cpp
   ares/node/video/sprite.cpp

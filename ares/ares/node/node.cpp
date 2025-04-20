@@ -5,5 +5,6 @@ namespace ares::Core {
   }
   namespace Audio {
     #include <ares/node/audio/stream.cpp>
+    #include <ares/node/audio/midi.cpp>
   }
 }

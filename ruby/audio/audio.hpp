@@ -103,6 +103,8 @@ struct Audio {
   auto level() -> double;
   auto output(const f64 samples[]) -> void;
 
+  auto midiShort(s32 msg) -> void;
+
 protected:
   Audio& self;
   unique_pointer<AudioDriver> instance;
