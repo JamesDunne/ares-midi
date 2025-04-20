@@ -37,8 +37,6 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     // silence:
 
     if (m.noteOn) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
       // note off:
       emit(0x80 | m.noteChan, m.noteOn, 0x00);
       m.noteOn = 0;
@@ -75,13 +73,10 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     // new note:
     m.noteOn = kn;
     m.noteChan = m.chans[duty];
-    m.noteVel = v;
-    emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+    emit(0x90 | m.noteChan, m.noteOn, 96);
   } else if ((m.noteOn != kn) || (m.noteChan != m.chans[duty])) {
     // changed note or duty:
     if (m.noteOn != 0) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
       // note off:
       emit(0x80 | m.noteChan, m.noteOn, 0x00);
     }
@@ -89,15 +84,14 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     // note on:
     m.noteOn = kn;
     m.noteChan = m.chans[duty];
-    m.noteVel = v;
-    emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+    emit(0x90 | m.noteChan, m.noteOn, 96);
   }
 
-  // adjust velocity:
+  // adjust volume:
   if (m.noteVel != v) {
-    // aftertouch:
+    // channel volume:
     m.noteVel = v;
-    emit(0xA0 | m.noteChan, m.noteOn, m.noteVel);
+    emit(0xB0 | m.noteChan, 0x07, m.noteVel);
   }
 
   // adjust pitch bend:

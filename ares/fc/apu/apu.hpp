@@ -5,10 +5,6 @@ struct APU : Thread {
   Node::Audio::Stream stream;
   Node::Audio::MIDI midi;
 
-  MIDIEmitter midiEmitter;
-  u32 midiClocks;
-  auto midiReset() -> void;
-
   auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
 
   //apu.cpp
@@ -240,6 +236,10 @@ struct APU : Thread {
 
   FrameCounter frame;
 
+  MIDIEmitter midiEmitter;
+  u32 midiClocks;
+  auto midiInit() -> void;
+  auto midiReset() -> void;
   auto generateMidi() -> void;
 
 //unserialized:
