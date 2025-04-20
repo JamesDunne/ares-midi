@@ -37,8 +37,6 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
     // silence:
 
     if (m.noteOn) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
       // note off:
       emit(0x80 | m.noteChan, m.noteOn, 0x00);
       m.noteOn = 0;
@@ -77,8 +75,6 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
     emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
   } else if (m.noteOn != kn) {
     if (m.noteOn != 0) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
       // note off:
       emit(0x80 | m.noteChan, m.noteOn, 0x00);
     }

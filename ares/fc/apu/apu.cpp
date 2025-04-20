@@ -333,6 +333,9 @@ auto APU::midiReset() -> void {
   if (triangle.m.noteOn) {
     midiEmitter(0x80 | triangle.m.noteChan, triangle.m.noteOn, 0x00);
   }
+  if (noise.m.noteOn) {
+    midiEmitter(0x80 | noise.m.noteChan, noise.m.noteOn, 0x00);
+  }
 
   // all notes off:
   for (int i = 0; i < 16; i++) {
@@ -387,6 +390,12 @@ auto APU::midiInit() -> void {
   midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x40); // vol
   midi->delay();
   midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
+
+  noise.m.chans[0] = 9;
+  midi->delay();
+  midiEmitter(0xC0 | noise.m.chans[0], 0, 0);
+  midi->delay();
+  midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x40); // vol
 }
 
 auto APU::generateMidi() -> void {
@@ -401,6 +410,7 @@ auto APU::generateMidi() -> void {
   pulse1.generateMidi( midiEmitter );
   pulse2.generateMidi( midiEmitter );
   triangle.generateMidi( midiEmitter );
+  noise.generateMidi( midiEmitter );
 }
 
 }

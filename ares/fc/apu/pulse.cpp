@@ -33,7 +33,7 @@ auto APU::Pulse::power(bool reset) -> void {
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
   u32 volume = envelope.volume();
 
-  if (volume == 0 || !sweep.checkPeriod() || length.counter == 0 || sweep.pulsePeriod < 0x008) {
+  if (!sweep.checkPeriod() || length.counter == 0 || sweep.pulsePeriod < 0x008) {
     // silence:
 
     if (m.noteOn) {
@@ -49,8 +49,12 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
 
   // velocity (0..127):
   int v;
-  //v = 1024.0 / (15.0 / (double)volume + 10.0);
-  v = 16.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
+  if (volume == 0) {
+    v = 0;
+  } else {
+    //v = 1024.0 / (15.0 / (double)volume + 10.0);
+    v = 16.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
+  }
 
   double f = 1'789'773.0 / (16.0 * ((double)sweep.pulsePeriod + 1.0));
   // A0 = midi note 21; 27.5Hz
@@ -87,7 +91,7 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     emit(0x90 | m.noteChan, m.noteOn, 96);
   }
 
-  // adjust volume:
+  // adjust channel volume:
   if (m.noteVel != v) {
     // channel volume:
     m.noteVel = v;

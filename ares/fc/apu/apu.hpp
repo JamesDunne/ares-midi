@@ -29,6 +29,8 @@ struct APU : Thread {
     u8  noteVel;
     n14 noteWheel;
 
+    u16 lastPeriod;
+
     u8  chans[4];
   };
 
@@ -149,6 +151,9 @@ struct APU : Thread {
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    auto generateMidi(MIDIEmitter&) -> void;
+    MidiState m;
 
     Length length;
     Envelope envelope;
