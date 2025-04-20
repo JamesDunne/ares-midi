@@ -33,7 +33,7 @@ auto APU::Triangle::power(bool reset) -> void {
 }
 
 auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
-  if (length.counter == 0 || linearLengthCounter == 0) {
+  if (length.counter == 0 || linearLengthCounter == 0 || period <= 1) {
     // silence:
 
     if (m.noteOn) {
@@ -60,11 +60,15 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
   }
 
   // integer part:
-  double k;
-  // fractional part:
-  double b = modf(n, &k);
+  double k = round(n);
+  // fractional part (-0.5 <= n < +0.5):
+  double b = (n - k);
 
+  // midi note:
   u8 kn = (u8)(int)k;
+  // pitch bend: (assuming +/- 2 semitone range)
+  n14 wheel = 8192 + (b * 4096.0);
+
   if (!m.noteOn) {
     // note on:
     m.noteOn = kn;
@@ -84,5 +88,11 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
     m.noteChan = m.chans[0];
     m.noteVel = v;
     emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+  }
+
+  // adjust pitch bend:
+  if (m.noteWheel != wheel) {
+    m.noteWheel = wheel;
+    emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
   }
 }

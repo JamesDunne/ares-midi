@@ -31,7 +31,9 @@ auto APU::Pulse::power(bool reset) -> void {
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
-  if (envelope.volume() == 0) {
+  u32 volume = envelope.volume();
+
+  if (volume == 0 || !sweep.checkPeriod() || length.counter == 0 || sweep.pulsePeriod < 0x008) {
     // silence:
 
     if (m.noteOn) {
@@ -44,28 +46,13 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     }
     return;
   }
-  if (sweep.pulsePeriod < 8) {
-    // silence:
-
-    if (m.noteOn) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
-      // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
-      m.noteOn = 0;
-      m.noteVel = 0;
-    }
-    return;
-  }
-
-//  if(!sweep.checkPeriod()) return 0;
-//  if(length.counter == 0) return 0;
 
   // audible note:
 
   // velocity (0..127):
-  int v = 1024.0/(15.0 / (double)envelope.volume() + 10.0);
-//double v = 24449.4 / (8128.0 / (envelope.volume()*2.0) + 100.0);
+  int v;
+  //v = 1024.0 / (15.0 / (double)volume + 10.0);
+  v = 16.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
 
   double f = 1'789'773.0 / (16.0 * ((double)sweep.pulsePeriod + 1.0));
   // A0 = midi note 21; 27.5Hz
@@ -75,18 +62,23 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
   }
 
   // integer part:
-  double k;
-  // fractional part:
-  double b = modf(n, &k);
+  double k = round(n);
+  // fractional part (-0.5 <= n < +0.5):
+  double b = (n - k);
 
+  // midi note:
   u8 kn = (u8)(int)k;
+  // pitch bend: (assuming +/- 2 semitone range)
+  n14 wheel = 8192 + (b * 4096.0);
+
   if (!m.noteOn) {
-    // note on:
+    // new note:
     m.noteOn = kn;
     m.noteChan = m.chans[duty];
     m.noteVel = v;
     emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
-  } else if (m.noteOn != kn) {
+  } else if ((m.noteOn != kn) || (m.noteChan != m.chans[duty])) {
+    // changed note or duty:
     if (m.noteOn != 0) {
       // aftertouch off:
       emit(0xA0 | m.noteChan, m.noteOn, 0x00);
@@ -99,18 +91,18 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     m.noteChan = m.chans[duty];
     m.noteVel = v;
     emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
-  } else if (m.noteVel != v) {
-    if (v <= 1) {
-      // aftertouch off:
-      emit(0xA0 | m.noteChan, m.noteOn, 0x00);
-      // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
-      m.noteVel = 0;
-      m.noteOn = 0;
-    } else {
-      // aftertouch:
-      emit(0xA0 | m.noteChan, m.noteOn, v);
-      m.noteVel = v;
-    }
+  }
+
+  // adjust velocity:
+  if (m.noteVel != v) {
+    // aftertouch:
+    m.noteVel = v;
+    emit(0xA0 | m.noteChan, m.noteOn, m.noteVel);
+  }
+
+  // adjust pitch bend:
+  if (m.noteWheel != wheel) {
+    m.noteWheel = wheel;
+    emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
   }
 }

@@ -24,18 +24,22 @@ auto init() -> void {
   }
   NSLog(@"portmidi: Pm_Initialize()");
 
-  PmDeviceID devOut = pmNoDevice;
   int devCount = Pm_CountDevices();
   for (int i = 0; i < devCount; i++) {
     auto d = Pm_GetDeviceInfo(i);
-    NSLog(@"portmidi: [%d]: interf='%s', name='%s', in=%d, out=%d",
+    NSLog(@"portmidi: [%d]: in=%d, out=%d, interf='%s', name='%s'",
       i,
-      d->interf,
-      d->name,
       d->input,
-      d->output
+      d->output,
+      d->interf,
+      d->name
     );
+  }
 
+  // prefer USB Midi:
+  PmDeviceID devOut = pmNoDevice;
+  for (int i = 0; i < devCount; i++) {
+    auto d = Pm_GetDeviceInfo(i);
     if (d->output) {
       if (strncmp("USB Midi", d->name, 8) == 0) {
         devOut = i;
@@ -43,7 +47,19 @@ auto init() -> void {
     }
   }
 
-//  PmDeviceID devOut = Pm_GetDefaultOutputDeviceID();
+  // fallback to IAC:
+  if (devOut == pmNoDevice) {
+    for (int i = 0; i < devCount; i++) {
+      auto d = Pm_GetDeviceInfo(i);
+      if (d->output) {
+        if (strncmp("IAC Driver Bus 1", d->name, 16) == 0) {
+          devOut = i;
+        }
+      }
+    }
+  }
+
+  //PmDeviceID devOut = Pm_GetDefaultOutputDeviceID();
 
   err = Pm_OpenOutput(
     &stream,
@@ -55,9 +71,10 @@ auto init() -> void {
     0        // latency
   );
   if (err != pmNoError) {
-    NSLog(@"portmidi: Pm_OpenOutput: %s", Pm_GetErrorText(err));
+    NSLog(@"portmidi: Pm_OpenOutput(%d): %s", devOut, Pm_GetErrorText(err));
     return;
   }
+
   NSLog(@"portmidi: Pm_OpenOutput(%d)", devOut);
 
   inited = true;
@@ -75,7 +92,7 @@ auto writeShort(s32 msg) -> void {
 
   PtTimestamp ts;
   if (msg == 0xFFFFFFFF) {
-    NSLog(@"midi: delay");
+//    NSLog(@"midi: delay");
     lastTs = Pt_Time();
     do {
       ts = Pt_Time();
@@ -86,9 +103,9 @@ auto writeShort(s32 msg) -> void {
 
   lastTs = ts = Pt_Time();
 
-  if ((msg&0xF0) >= 0xB0) {
-    NSLog(@"midi: %02X %02X", msg&0xFF, (msg>>8)&0xFF);
-  }
+//  if ((msg&0xF0) >= 0xB0 && (msg&0xF0) <= 0xC0) {
+//    NSLog(@"midi: %02X %02X %02X", msg&0xFF, (msg>>8)&0xFF, (msg>>16)&0xFF);
+//  }
 
   do {
     err = Pm_WriteShort(stream, ts, msg);

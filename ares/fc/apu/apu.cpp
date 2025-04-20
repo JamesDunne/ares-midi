@@ -45,11 +45,18 @@ auto APU::load(Node::Object parent) -> void {
     }
   }
 
+  midiClocks = 0;
   midi = node->append<Node::Audio::MIDI>("MIDI");
   midiEmitter = MIDIEmitter(
     &Core::Audio::MIDI::writeShort,
     midi.data()
   );
+
+  pulse1.m.noteOn = 0;
+  pulse2.m.noteOn = 0;
+  triangle.m.noteOn = 0;
+
+  midiReset();
 
   u8 dutyPCs[4] = { 81, 82, 80, 87 };
   for (int n = 0; n < 4; n++) {
@@ -59,14 +66,14 @@ auto APU::load(Node::Object parent) -> void {
     midi->delay();
     midiEmitter(0xC0 | pulse1.m.chans[n], dutyPCs[n], 0);
     midi->delay();
-    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0x40); // vol
+    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0x60); // vol
     midi->delay();
     midiEmitter(0xB0 | pulse1.m.chans[n], 0x0A, 0x28); // pan
 
     midi->delay();
     midiEmitter(0xC0 | pulse2.m.chans[n], dutyPCs[n], 0);
     midi->delay();
-    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0x40); // vol
+    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0x60); // vol
     midi->delay();
     midiEmitter(0xB0 | pulse2.m.chans[n], 0x0A, 0x58); // pan
   }
@@ -80,10 +87,42 @@ auto APU::load(Node::Object parent) -> void {
   midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
 }
 
+auto APU::midiReset() -> void {
+  // note off on all channels:
+  if (pulse1.m.noteOn) {
+    midiEmitter(0x80 | pulse1.m.noteChan, pulse1.m.noteOn, 0x00);
+  }
+  if (pulse2.m.noteOn) {
+    midiEmitter(0x80 | pulse2.m.noteChan, pulse2.m.noteOn, 0x00);
+  }
+  if (triangle.m.noteOn) {
+    midiEmitter(0x80 | triangle.m.noteChan, triangle.m.noteOn, 0x00);
+  }
+
+  // all notes off:
+  for (int i = 0; i < 16; i++) {
+    midi->delay();
+    midiEmitter(0xB0 | i, 123, 0x00);
+    midi->delay();
+  }
+
+  // reset all controllers:
+  for (int i = 0; i < 16; i++) {
+    midi->delay();
+    midiEmitter(0xB0 | i, 121, 0x00);
+    midi->delay();
+    midi->delay();
+    midi->delay();
+  }
+}
+
 auto APU::unload() -> void {
+  midiReset();
+
   midiEmitter.reset();
-  node->remove(stream);
   node->remove(midi);
+
+  node->remove(stream);
   stream.reset();
   node.reset();
 }
@@ -346,6 +385,11 @@ const n16 APU::dmcPeriodTablePAL[16] = {
 };
 
 auto APU::generateMidi() -> void {
+  if (midiClocks++ < 256) {
+    return;
+  }
+  midiClocks = 0;
+
   pulse1.generateMidi( midiEmitter );
   pulse2.generateMidi( midiEmitter );
   triangle.generateMidi( midiEmitter );

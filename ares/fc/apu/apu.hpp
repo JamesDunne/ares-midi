@@ -6,6 +6,8 @@ struct APU : Thread {
   Node::Audio::MIDI midi;
 
   MIDIEmitter midiEmitter;
+  u32 midiClocks;
+  auto midiReset() -> void;
 
   auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
 
@@ -29,7 +31,7 @@ struct APU : Thread {
     u8  noteOn;
     u8  noteChan;
     u8  noteVel;
-    //n14 wheel;
+    n14 noteWheel;
 
     u8  chans[4];
   };
