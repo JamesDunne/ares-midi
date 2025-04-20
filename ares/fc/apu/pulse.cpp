@@ -38,7 +38,10 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
 
     if (m.noteOn) {
       // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
+      emit(0x80 | m.chans[0], m.noteOn, 0x00);
+      emit(0x80 | m.chans[1], m.noteOn, 0x00);
+      emit(0x80 | m.chans[2], m.noteOn, 0x00);
+      emit(0x80 | m.chans[3], m.noteOn, 0x00);
       m.noteOn = 0;
       m.noteVel = 0;
     }
@@ -53,7 +56,7 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     v = 0;
   } else {
     //v = 1024.0 / (15.0 / (double)volume + 10.0);
-    v = 16.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
+    v = 24.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
   }
 
   double f = 1'789'773.0 / (16.0 * ((double)sweep.pulsePeriod + 1.0));
@@ -76,31 +79,43 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
   if (!m.noteOn) {
     // new note:
     m.noteOn = kn;
-    m.noteChan = m.chans[duty];
-    emit(0x90 | m.noteChan, m.noteOn, 96);
-  } else if ((m.noteOn != kn) || (m.noteChan != m.chans[duty])) {
-    // changed note or duty:
+    emit(0x90 | m.chans[0], m.noteOn, 96);
+    emit(0x90 | m.chans[1], m.noteOn, 96);
+    emit(0x90 | m.chans[2], m.noteOn, 96);
+    emit(0x90 | m.chans[3], m.noteOn, 96);
+  } else if (m.noteOn != kn) {
+    // changed note:
     if (m.noteOn != 0) {
       // note off:
-      emit(0x80 | m.noteChan, m.noteOn, 0x00);
+      emit(0x80 | m.chans[0], m.noteOn, 0x00);
+      emit(0x80 | m.chans[1], m.noteOn, 0x00);
+      emit(0x80 | m.chans[2], m.noteOn, 0x00);
+      emit(0x80 | m.chans[3], m.noteOn, 0x00);
     }
 
     // note on:
     m.noteOn = kn;
-    m.noteChan = m.chans[duty];
-    emit(0x90 | m.noteChan, m.noteOn, 96);
+    emit(0x90 | m.chans[0], m.noteOn, 96);
+    emit(0x90 | m.chans[1], m.noteOn, 96);
+    emit(0x90 | m.chans[2], m.noteOn, 96);
+    emit(0x90 | m.chans[3], m.noteOn, 96);
   }
 
-  // adjust channel volume:
-  if (m.noteVel != v) {
+  // adjust channel volumes:
+  if ((m.noteVel != v) || (m.lastDuty != duty)) {
     // channel volume:
+    emit(0xB0 | m.chans[m.lastDuty], 0x07, 0x00);
+    emit(0xB0 | m.chans[duty], 0x07, v);
+    m.lastDuty = duty;
     m.noteVel = v;
-    emit(0xB0 | m.noteChan, 0x07, m.noteVel);
   }
 
   // adjust pitch bend:
   if (m.noteWheel != wheel) {
     m.noteWheel = wheel;
-    emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+    emit(0xE0 | m.chans[0], m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+    emit(0xE0 | m.chans[1], m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+    emit(0xE0 | m.chans[2], m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+    emit(0xE0 | m.chans[3], m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
   }
 }

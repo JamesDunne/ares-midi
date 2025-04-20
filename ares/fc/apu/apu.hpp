@@ -29,6 +29,7 @@ struct APU : Thread {
     u8  noteVel;
     n14 noteWheel;
 
+    u2  lastDuty;
     u16 lastPeriod;
 
     u8  chans[4];

@@ -325,10 +325,16 @@ const n16 APU::dmcPeriodTablePAL[16] = {
 auto APU::midiReset() -> void {
   // note off on all channels:
   if (pulse1.m.noteOn) {
-    midiEmitter(0x80 | pulse1.m.noteChan, pulse1.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[0], pulse1.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[1], pulse1.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[2], pulse1.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[3], pulse1.m.noteOn, 0x00);
   }
   if (pulse2.m.noteOn) {
-    midiEmitter(0x80 | pulse2.m.noteChan, pulse2.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[0], pulse2.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[1], pulse2.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[2], pulse2.m.noteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[3], pulse2.m.noteOn, 0x00);
   }
   if (triangle.m.noteOn) {
     midiEmitter(0x80 | triangle.m.noteChan, triangle.m.noteOn, 0x00);
@@ -371,14 +377,14 @@ auto APU::midiInit() -> void {
     midi->delay();
     midiEmitter(0xC0 | pulse1.m.chans[n], dutyPCs[n], 0);
     midi->delay();
-    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0x60); // vol
+    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0); // vol
     midi->delay();
     midiEmitter(0xB0 | pulse1.m.chans[n], 0x0A, 0x28); // pan
 
     midi->delay();
     midiEmitter(0xC0 | pulse2.m.chans[n], dutyPCs[n], 0);
     midi->delay();
-    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0x60); // vol
+    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0); // vol
     midi->delay();
     midiEmitter(0xB0 | pulse2.m.chans[n], 0x0A, 0x58); // pan
   }
@@ -402,7 +408,7 @@ auto APU::generateMidi() -> void {
   // send 1 MIDI message every 0.00076800 sec
   //         each APU cycle is 0.00000056 sec
   // means we can send one MIDI message every 1369 APU clock cycles:
-  if (midiClocks++ < 1369) {
+  if (midiClocks++ < 1369*16) {
     return;
   }
   midiClocks = 0;
