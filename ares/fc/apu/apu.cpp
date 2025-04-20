@@ -390,7 +390,10 @@ auto APU::midiInit() -> void {
 }
 
 auto APU::generateMidi() -> void {
-  if (midiClocks++ < 256) {
+  // send 1 MIDI message every 0.00076800 sec
+  //         each APU cycle is 0.00000056 sec
+  // means we can send one MIDI message every 1369 APU clock cycles:
+  if (midiClocks++ < 1369) {
     return;
   }
   midiClocks = 0;

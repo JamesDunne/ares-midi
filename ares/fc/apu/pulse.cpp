@@ -59,9 +59,9 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     return;
   }
 
-  // integer part:
+  // nearest whole semitone:
   double k = round(n);
-  // fractional part (-0.5 <= n < +0.5):
+  // pitch difference in semitones (-0.5 <= b < +0.5):
   double b = (n - k);
 
   // midi note:
