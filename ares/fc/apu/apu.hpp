@@ -24,6 +24,7 @@ struct APU : Thread {
   auto serialize(serializer&) -> void;
 
   struct MidiState {
+    u8  noteNew;
     u8  noteOn;
     u8  noteChan;
     u8  noteVel;
@@ -34,8 +35,14 @@ struct APU : Thread {
     u8  lastVel;
     n14 lastWheel;
 
+    u8  lastTriggeredPeriod;
+    u32 lastTriggeredVolume;
+
     u2  lastDuty;
     u16 lastPeriod;
+    u32 lastCycleVolume;
+
+    bool triggered;
 
     u8  chans[4];
     u8  chanVel[4];
@@ -252,6 +259,7 @@ struct APU : Thread {
   FrameCounter frame;
 
   MIDIEmitter midiEmitter;
+  u32 midiMessages;
   u32 midiClocks;
   auto midiInit() -> void;
   auto midiReset() -> void;

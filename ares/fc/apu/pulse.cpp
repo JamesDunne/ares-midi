@@ -74,33 +74,34 @@ auto APU::Pulse::calculateMidi() -> void {
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
-  // audible note:
   if (m.noteOn != m.lastNoteOn || m.noteChan != m.lastChan) {
-    // note off:
-    emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
+    if (m.lastNoteOn != 0) {
+      // note off:
+      emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
+      m.lastNoteOn = 0;
+    }
+    if (m.noteOn != 0) {
+      // note on:
+      emit(0x90 | m.noteChan, m.noteOn, 96);
+      m.lastNoteOn = m.noteOn;
+      m.lastChan = m.noteChan;
+    }
   }
 
   if (m.noteOn == 0) {
-    goto done;
-  }
-  if (m.noteOn != m.lastNoteOn || m.noteChan != m.lastChan) {
-    emit(0x90 | m.noteChan, m.noteOn, 96);
+    return;
   }
 
   // adjust pitch bend:
   if (m.noteWheel != m.lastWheel) {
     emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+    m.lastWheel = m.noteWheel;
   }
 
   // adjust channel volumes:
   if (m.noteVel != m.lastVel) {
     // channel volume:
     emit(0xB0 | m.noteChan, 0x07, m.noteVel);
+    m.lastVel = m.noteVel;
   }
-
-done:
-  m.lastNoteOn = m.noteOn;
-  m.lastChan = m.noteChan;
-  m.lastVel = m.noteVel;
-  m.lastWheel = m.noteWheel;
 }

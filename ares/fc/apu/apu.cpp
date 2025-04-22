@@ -46,10 +46,10 @@ auto APU::load(Node::Object parent) -> void {
   }
 
   midi = node->append<Node::Audio::MIDI>("MIDI");
-  midiEmitter = MIDIEmitter(
-    &Core::Audio::MIDI::writeShort,
-    midi.data()
-  );
+  midiEmitter = MIDIEmitter([&](u8 cmd, u8 d1, u8 d2){
+    midi->writeShort(cmd, d1, d2);
+    midiMessages++;
+  });
 
   midiInit();
 }
@@ -358,6 +358,8 @@ auto APU::midiReset() -> void {
     midi->delay();
     midi->delay();
   }
+
+  midiMessages = 0;
 }
 
 auto APU::midiInit() -> void {
@@ -366,6 +368,12 @@ auto APU::midiInit() -> void {
   pulse1.m.noteOn = 0;
   pulse2.m.noteOn = 0;
   triangle.m.noteOn = 0;
+  noise.m.noteOn = 0;
+
+  pulse1.m.lastNoteOn = 0;
+  pulse2.m.lastNoteOn = 0;
+  triangle.m.lastNoteOn = 0;
+  noise.m.lastNoteOn = 0;
 
   midiReset();
 
@@ -402,6 +410,8 @@ auto APU::midiInit() -> void {
   midiEmitter(0xC0 | noise.m.chans[0], 0, 0);
   midi->delay();
   midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x40); // vol
+
+  midiMessages = 0;
 }
 
 auto APU::generateMidi() -> void {
@@ -411,13 +421,17 @@ auto APU::generateMidi() -> void {
   triangle.calculateMidi();
   noise.calculateMidi();
 
+#if 1
   // send 1 MIDI message every 0.00076800 sec
   //         each APU cycle is 0.00000056 sec
   // means we can send one MIDI message every 1374 APU clock cycles:
-  if (midiClocks++ < 1374*(4+4+3+2)*2) {
+  if (midiClocks++ < 1374*midiMessages) {
     return;
   }
+#endif
+
   midiClocks = 0;
+  midiMessages = 0;
 
   // emit messages to transition to desired midi state:
   pulse1.generateMidi( midiEmitter );

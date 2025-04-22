@@ -30,18 +30,42 @@ auto APU::Noise::power(bool reset) -> void {
 }
 
 auto APU::Noise::calculateMidi() -> void {
-  u32 volume = envelope.volume();
-
-  if (volume == 0 || length.counter == 0 || period == 0) {
+  if (length.counter == 0) {
     // silence:
     m.noteOn = 0;
     m.noteVel = 0;
-
     m.lastPeriod = period;
+    m.lastCycleVolume = 0;
+    return;
+  }
+
+  u32 volume = envelope.volume();
+  if (volume == 0) {
+    // silence:
+    m.noteOn = 0;
+    m.noteVel = 0;
+    m.lastPeriod = period;
+    m.lastCycleVolume = 0;
     return;
   }
 
   // audible note:
+  bool trigger = false;
+  if (period != m.lastPeriod) {
+    trigger = true;
+  }
+  m.lastPeriod = period;
+  if (volume > m.lastCycleVolume) {
+    trigger = true;
+  }
+  m.lastCycleVolume = volume;
+
+  // prevent retriggering:
+  if (!trigger) return;
+
+  // trigger new note:
+  m.noteNew = 1;
+  m.lastTriggeredVolume = volume;
 
   // velocity (0..127):
   int v;
@@ -50,10 +74,6 @@ auto APU::Noise::calculateMidi() -> void {
 
   // midi note:
   u8 kn;
-
-  if (period != m.lastPeriod) {
-    printf("noise: period=%1X\n", period);
-  }
 
   if (period >= 0xB) {
     // bass drum:
@@ -64,48 +84,38 @@ auto APU::Noise::calculateMidi() -> void {
   } else if (period >= 0x4) {
     // crash:
     kn = (period&1) ? 49 : 57;
-  } else if (period == 0x1) {
-    // open triangle: (for Solstice)
-    kn = 81;
-  } else {
+  } else if (period >= 0x2) {
     // closed hi-hit:
     kn = 42;
-  }
-
-  if (!m.noteOn) {
-    // note on:
-    m.noteOn = kn;
-    m.noteChan = m.chans[0];
-    m.noteVel = v;
-  } else if (m.noteOn != kn || v > m.noteVel) {
-    if (period >= m.lastPeriod) {
-      // change note or repeat note if increased velocity:
-
-      // note on:
-      m.noteOn = kn;
-      m.noteChan = m.chans[0];
-      m.noteVel = v;
+  } else {
+    if (!envelope.useSpeedAsVolume) {
+      // open triangle: (for Solstice)
+      kn = 81;
+    } else {
+      // open hi-hat:
+      kn = 46;
     }
   }
 
+  // note on:
+  m.noteOn = kn;
+  m.noteChan = m.chans[0];
   m.noteVel = v;
-  m.lastPeriod = period;
 }
 
 auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
-  // audible note:
-  if (m.noteOn != m.lastNoteOn) {
-    // note off:
-    emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
+  if ((m.noteOn != m.lastNoteOn) || (m.noteVel != m.lastVel) || (m.noteNew)) {
+    if (m.lastNoteOn != 0) {
+      // note off:
+      emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
+      m.lastNoteOn = 0;
+    }
+    if (m.noteOn != 0 && m.noteVel != 0 || m.noteNew) {
+      // note on:
+      emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+      m.lastNoteOn = m.noteOn;
+      m.lastVel = m.noteVel;
+      m.noteNew = 0;
+    }
   }
-
-  if (m.noteOn == 0) {
-    goto done;
-  }
-  if (m.noteOn != m.lastNoteOn) {
-    emit(0x90 | m.noteChan, m.noteOn, 96);
-  }
-
-done:
-  m.lastNoteOn = m.noteOn;
 }
