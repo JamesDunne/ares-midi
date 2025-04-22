@@ -60,6 +60,10 @@ auto APU::Triangle::calculateMidi() -> void {
 
   // midi note:
   u8 kn = (u8)(int)k;
+  if (m.noteOn != 0 && abs(k - (double)m.noteOn) < 2.0) {
+    // use the last note if it's not too far away to avoid alternating note off/on too close to a center pitch vibrato:
+    k = m.noteOn;
+  }
   // pitch bend: (assuming +/- 2 semitone range)
   n14 wheel = 8192 + (b * 4096.0);
 

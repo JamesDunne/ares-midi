@@ -58,6 +58,10 @@ auto APU::Pulse::calculateMidi() -> void {
 
   // nearest whole semitone:
   double k = round(n);
+  if (m.noteOn != 0 && abs(k - (double)m.noteOn) < 2.0) {
+    // use the last note if it's not too far away to avoid alternating note off/on too close to a center pitch vibrato:
+    k = m.noteOn;
+  }
   // pitch difference in semitones (-0.5 <= b < +0.5):
   double b = (n - k);
 
@@ -74,6 +78,8 @@ auto APU::Pulse::calculateMidi() -> void {
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
+  u8 lastChan = m.lastChan;
+
   if (m.noteOn != m.lastNoteOn || m.noteChan != m.lastChan) {
     if (m.lastNoteOn != 0) {
       // note off:
@@ -93,13 +99,13 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
   }
 
   // adjust pitch bend:
-  if (m.noteWheel != m.lastWheel) {
+  if (m.noteWheel != m.lastWheel || m.noteChan != lastChan) {
     emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
     m.lastWheel = m.noteWheel;
   }
 
   // adjust channel volumes:
-  if (m.noteVel != m.lastVel) {
+  if (m.noteVel != m.lastVel || m.noteChan != lastChan) {
     // channel volume:
     emit(0xB0 | m.noteChan, 0x07, m.noteVel);
     m.lastVel = m.noteVel;

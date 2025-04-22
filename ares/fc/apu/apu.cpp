@@ -422,10 +422,10 @@ auto APU::generateMidi() -> void {
   noise.calculateMidi();
 
 #if 1
-  // send 1 MIDI message every 0.00076800 sec
-  //         each APU cycle is 0.00000056 sec
-  // means we can send one MIDI message every 1374 APU clock cycles:
-  if (midiClocks++ < 1374*midiMessages) {
+  // MIDI message takes 0.000960000 sec (= 3 bytes / 3,125 bytes / sec)
+  //    APU cycle takes 0.000000560 sec
+  // means we can send one MIDI message every 1714.28571429 APU clock cycles:
+  if (midiClocks++ < 1714*midiMessages) {
     return;
   }
 #endif

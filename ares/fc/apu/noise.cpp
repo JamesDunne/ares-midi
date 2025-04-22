@@ -88,7 +88,7 @@ auto APU::Noise::calculateMidi() -> void {
     // closed hi-hit:
     kn = 42;
   } else {
-    if (!envelope.useSpeedAsVolume) {
+    if (envelope.useSpeedAsVolume) {
       // open triangle: (for Solstice)
       kn = 81;
     } else {
