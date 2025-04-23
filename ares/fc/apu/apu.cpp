@@ -406,7 +406,7 @@ auto APU::midiInit() -> void {
   midi->delay();
   midiEmitter(0xC0 | triangle.m.chans[0], 39, 0);
   midi->delay();
-  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x40); // vol
+  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x60); // vol
   midi->delay();
   midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
 
@@ -414,11 +414,13 @@ auto APU::midiInit() -> void {
   midi->delay();
   midiEmitter(0xC0 | noise.m.chans[0], 0, 0);
   midi->delay();
-  midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x40); // vol
+  midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x60); // vol
 
   // DMC orchestra hit
   midi->delay();
   midiEmitter(0xC0 | 10, 55, 0);
+  midi->delay();
+  midiEmitter(0xB0 | 10, 0x07, 0x60); // vol
 
   midiMessages = 0;
 }
@@ -435,7 +437,7 @@ auto APU::generateMidi() -> void {
   // MIDI message takes 0.000960000 sec (= 3 bytes / 3,125 bytes / sec)
   //    APU cycle takes 0.000000560 sec
   // means we can send one MIDI message every 1714.28571429 APU clock cycles:
-  if (midiClocks++ < 1714*midiMessages) {
+  if (midiClocks++ < 1714*3*midiMessages) {
     return;
   }
 #endif

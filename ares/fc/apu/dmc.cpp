@@ -2,7 +2,9 @@ auto APU::DMC::start() -> void {
   if(lengthCounter == 0) {
     readAddress = 0x4000 + (addressLatch << 6);
     lengthCounter = (lengthLatch << 4) + 1;
-    m.triggered = true;
+    if (lengthCounter > 1) {
+      m.triggered = true;
+    }
 
     if (!dmaBufferValid)
       dmaDelayCounter = periodCounter & 1 ? 2 : 3;
