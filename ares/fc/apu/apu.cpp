@@ -342,6 +342,9 @@ auto APU::midiReset() -> void {
   if (noise.m.noteOn) {
     midiEmitter(0x80 | noise.m.noteChan, noise.m.noteOn, 0x00);
   }
+  if (dmc.m.noteOn) {
+    midiEmitter(0x80 | dmc.m.noteChan, dmc.m.noteOn, 0x00);
+  }
 
   // all notes off:
   for (int i = 0; i < 16; i++) {
@@ -369,11 +372,13 @@ auto APU::midiInit() -> void {
   pulse2.m.noteOn = 0;
   triangle.m.noteOn = 0;
   noise.m.noteOn = 0;
+  dmc.m.noteOn = 0;
 
   pulse1.m.lastNoteOn = 0;
   pulse2.m.lastNoteOn = 0;
   triangle.m.lastNoteOn = 0;
   noise.m.lastNoteOn = 0;
+  dmc.m.lastNoteOn = 0;
 
   midiReset();
 
@@ -420,6 +425,7 @@ auto APU::generateMidi() -> void {
   pulse2.calculateMidi();
   triangle.calculateMidi();
   noise.calculateMidi();
+  dmc.calculateMidi();
 
 #if 1
   // MIDI message takes 0.000960000 sec (= 3 bytes / 3,125 bytes / sec)
@@ -438,6 +444,7 @@ auto APU::generateMidi() -> void {
   pulse2.generateMidi( midiEmitter );
   triangle.generateMidi( midiEmitter );
   noise.generateMidi( midiEmitter );
+  dmc.generateMidi( midiEmitter );
 }
 
 }

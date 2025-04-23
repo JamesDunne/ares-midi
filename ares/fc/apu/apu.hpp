@@ -42,7 +42,12 @@ struct APU : Thread {
     u16 lastPeriod;
     u32 lastCycleVolume;
 
+    n8  lastAddressLatch;
+    n8  lastLengthLatch;
+    n16 lastLengthCounter;
+
     bool triggered;
+    bool triggeredStop;
 
     u8  chans[4];
     u8  chanVel[4];
@@ -193,6 +198,15 @@ struct APU : Thread {
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    auto calculateMidi() -> void;
+    auto generateMidi(MIDIEmitter&) -> void;
+    MidiState m;
+
+    using generateMidiFromPeriod = function<auto (n4 period, u8& chanOut, u8& noteOut, u8& velOut) -> void>;
+
+    nall::map<u64, generateMidiFromPeriod> sampleDescriptors;
+    nall::map<u64, nall::map<n4, bool> > samplesMissing;
 
     n16 lengthCounter;
     n16 periodCounter;
