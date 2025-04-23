@@ -324,26 +324,26 @@ const n16 APU::dmcPeriodTablePAL[16] = {
 
 auto APU::midiReset() -> void {
   // note off on all channels:
-  if (pulse1.m.noteOn) {
-    midiEmitter(0x80 | pulse1.m.chans[0], pulse1.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse1.m.chans[1], pulse1.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse1.m.chans[2], pulse1.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse1.m.chans[3], pulse1.m.noteOn, 0x00);
+  if (pulse1.m.lastNoteOn) {
+    midiEmitter(0x80 | pulse1.m.chans[0], pulse1.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[1], pulse1.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[2], pulse1.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse1.m.chans[3], pulse1.m.lastNoteOn, 0x00);
   }
-  if (pulse2.m.noteOn) {
-    midiEmitter(0x80 | pulse2.m.chans[0], pulse2.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse2.m.chans[1], pulse2.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse2.m.chans[2], pulse2.m.noteOn, 0x00);
-    midiEmitter(0x80 | pulse2.m.chans[3], pulse2.m.noteOn, 0x00);
+  if (pulse2.m.lastNoteOn) {
+    midiEmitter(0x80 | pulse2.m.chans[0], pulse2.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[1], pulse2.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[2], pulse2.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | pulse2.m.chans[3], pulse2.m.lastNoteOn, 0x00);
   }
-  if (triangle.m.noteOn) {
-    midiEmitter(0x80 | triangle.m.noteChan, triangle.m.noteOn, 0x00);
+  if (triangle.m.lastNoteOn) {
+    midiEmitter(0x80 | triangle.m.lastChan, triangle.m.lastNoteOn, 0x00);
   }
-  if (noise.m.noteOn) {
-    midiEmitter(0x80 | noise.m.noteChan, noise.m.noteOn, 0x00);
+  if (noise.m.lastNoteOn) {
+    midiEmitter(0x80 | noise.m.lastChan, noise.m.lastNoteOn, 0x00);
   }
-  if (dmc.m.noteOn) {
-    midiEmitter(0x80 | dmc.m.noteChan, dmc.m.noteOn, 0x00);
+  if (dmc.m.lastNoteOn) {
+    midiEmitter(0x80 | dmc.m.lastChan, dmc.m.lastNoteOn, 0x00);
   }
 
   // all notes off:
@@ -415,6 +415,10 @@ auto APU::midiInit() -> void {
   midiEmitter(0xC0 | noise.m.chans[0], 0, 0);
   midi->delay();
   midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x40); // vol
+
+  // DMC orchestra hit
+  midi->delay();
+  midiEmitter(0xC0 | 10, 55, 0);
 
   midiMessages = 0;
 }

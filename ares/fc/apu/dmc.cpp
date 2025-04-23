@@ -69,36 +69,46 @@ auto APU::DMC::power(bool reset) -> void {
   // SMB3:
   {
     // kick drum:
-    sampleDescriptors.insert(0x82A9954CEA45D76AULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 36; v = 96; });
+    sampleDescriptors.insert(0x82A9954CEA45D76AULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
     // snare drum:
-    sampleDescriptors.insert(0x5875F05F7B1D6EE7ULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 38; v = 96; });
+    sampleDescriptors.insert(0x5875F05F7B1D6EE7ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
     // tom:
-    sampleDescriptors.insert(0xF82E24ED29B23E6DULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 47 + (period - 0xE); v = 96; });
+    sampleDescriptors.insert(0xF82E24ED29B23E6DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=47 + (p - 0xE); v=96; });
     // high wood block:
-    sampleDescriptors.insert(0x715DDEF53031FC1BULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 77 - (period - 0xE); v = 96; });
+    sampleDescriptors.insert(0x715DDEF53031FC1BULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=77 - (p - 0xE); v=96; });
     // timbale:
-    sampleDescriptors.insert(0x14E85FA4D6211223ULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 66 - (period - 0xE); v = 96; });
+    sampleDescriptors.insert(0x14E85FA4D6211223ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=66 - (p - 0xE); v=96; });
 
     // block explosion long
-    sampleDescriptors.insert(0x530AD3FAABD3E6CDULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 61; v = 96; });
+    sampleDescriptors.insert(0x530AD3FAABD3E6CDULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=61; v=96; });
     // block explosion short
-    sampleDescriptors.insert(0x34EAE0720494FA43ULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 61; v = 96; });
+    sampleDescriptors.insert(0x34EAE0720494FA43ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=61; v=96; });
 
     // fortress timpani hits
-    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 41 + (period - 0xE)*2; v = 96; });
+    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=41 + (p - 0xE)*2; v=96; });
   }
 
   // Super-C:
   {
     // kick drum:
-    sampleDescriptors.insert(0x7CF96FBF8992F1B8ULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 36; v = 96; });
+    sampleDescriptors.insert(0x7CF96FBF8992F1B8ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
     // snare drum:
-    sampleDescriptors.insert(0x7CE12344BCC44AC8ULL, [](n4 period, u8& c, u8& n, u8& v){ c = 9; n = 38; v = 96; });
+    sampleDescriptors.insert(0x7CE12344BCC44AC8ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
+
+    // toms:
+    sampleDescriptors.insert(0x621CFEA6F56DECB0ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=array<u8[3]>{48,47,45}[0xF-p]; v=96; });
 
     // orchestra hits:
-    //dmc: 0x1289EC66C4831269: a=71, l=2C, p=D NOT found
-    //dmc: 0xB050AD75C62B7C7B: a=66, l=2C, p=D NOT found
-    //dmc: 0x616ED59931F78D52: a=5B, l=2C, p=D NOT found
+    sampleDescriptors.insert(0x479ac6554ae6ff14ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=38+12; v=96; /* (D-2) p=0xD */ });
+    sampleDescriptors.insert(0x82e05ddd4aaaff9aULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=39+12; v=96; /* (D#2) p=0xD */ });
+    sampleDescriptors.insert(0x02e6bcfdd42e1039ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=40+12; v=96; /* (E-2) p=0xD */ });
+    sampleDescriptors.insert(0xb96362a05fb2bae8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=41+12; v=96; /* (F-2) p=0xD */ });
+    sampleDescriptors.insert(0x64d735a09b5ea750ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=43+12; v=96; /* (G-2) p=0xD */ });
+    sampleDescriptors.insert(0xbbfc22343c6e44b8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=44+12; v=96; /* (G#2) p=0xD */ });
+    sampleDescriptors.insert(0xe183be8c0e51c7c7ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=45+12; v=96; /* (A-2) p=0xD */ });
+    sampleDescriptors.insert(0x616ed59931f78d52ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=46+12; v=96; /* (A#2) p=0xD */ });
+    sampleDescriptors.insert(0xb050ad75c62b7c7bULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=47+12; v=96; /* (B-2) p=0xD */ });
+    sampleDescriptors.insert(0x1289ec66c4831269ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=48+12; v=96; /* (C-3) p=0xD */ });
   }
 }
 
@@ -139,10 +149,13 @@ auto APU::DMC::calculateMidi() -> void {
     if (maybeDesc) {
       maybeDesc.get()(period, m.noteChan, m.noteOn, m.noteVel);
 
-      printf("dmc: 0x%016llX: a=%02X, l=%02X, p=%1X found\n", h, (u8)addressLatch, (u8)lengthLatch, (u8)period);
+      //printf("dmc: 0x%016llX: a=%02X, l=%02X, p=%1X found\n", h, (u8)addressLatch, (u8)lengthLatch, (u8)period);
     } else {
       printf("dmc: 0x%016llX: a=%02X, l=%02X, p=%1X NOT found\n", h, (u8)addressLatch, (u8)lengthLatch, (u8)period);
+    }
 
+#if 1
+    {
       auto periodsMapMaybe = samplesMissing.find(h);
       if (!periodsMapMaybe) {
         samplesMissing.insert(h, {});
@@ -208,6 +221,7 @@ auto APU::DMC::calculateMidi() -> void {
         periodsMapMaybe.get().insert(period, true);
       }
     }
+#endif
 
     m.lastAddressLatch = addressLatch;
     m.lastLengthLatch = lengthLatch;
@@ -233,12 +247,13 @@ auto APU::DMC::generateMidi(MIDIEmitter& emit) -> void {
   if ((m.noteOn != m.lastNoteOn) || (m.noteVel != m.lastVel) || (m.noteNew)) {
     if (m.lastNoteOn != 0) {
       // note off:
-      emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
+      emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
       m.lastNoteOn = 0;
     }
     if (m.noteOn != 0 && m.noteVel != 0 || m.noteNew) {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+      m.lastChan = m.noteChan;
       m.lastNoteOn = m.noteOn;
       m.lastVel = m.noteVel;
       m.noteNew = 0;
