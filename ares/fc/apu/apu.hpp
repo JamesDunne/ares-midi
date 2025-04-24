@@ -51,6 +51,12 @@ struct APU : Thread {
 
     u8  chans[4];
     u8  chanVel[4];
+    
+    auto rateLimit() -> bool;
+    auto rateControl() -> void;
+    
+    u32 messages;
+    u32 clocks;
   };
 
   struct Length {
@@ -207,6 +213,7 @@ struct APU : Thread {
 
     nall::map<u64, generateMidiFromPeriod> sampleDescriptors;
     nall::map<u64, nall::map<n4, bool> > samplesMissing;
+    u32 clocksSinceStart;
 
     n16 lengthCounter;
     n16 periodCounter;

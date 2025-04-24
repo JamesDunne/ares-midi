@@ -78,6 +78,8 @@ auto APU::Pulse::calculateMidi() -> void {
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
+  if (m.rateLimit()) return;
+
   u8 lastChan = m.lastChan;
 
   if (m.noteOn != m.lastNoteOn || m.noteChan != m.lastChan) {
@@ -94,20 +96,20 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     }
   }
 
-  if (m.noteOn == 0) {
-    return;
+  if (m.noteOn != 0) {
+    // adjust pitch bend:
+    if (m.noteWheel != m.lastWheel || m.noteChan != lastChan) {
+      emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+      m.lastWheel = m.noteWheel;
+    }
+    
+    // adjust channel volumes:
+    if (m.noteVel != m.lastVel || m.noteChan != lastChan) {
+      // channel volume:
+      emit(0xB0 | m.noteChan, 0x07, m.noteVel);
+      m.lastVel = m.noteVel;
+    }
   }
 
-  // adjust pitch bend:
-  if (m.noteWheel != m.lastWheel || m.noteChan != lastChan) {
-    emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
-    m.lastWheel = m.noteWheel;
-  }
-
-  // adjust channel volumes:
-  if (m.noteVel != m.lastVel || m.noteChan != lastChan) {
-    // channel volume:
-    emit(0xB0 | m.noteChan, 0x07, m.noteVel);
-    m.lastVel = m.noteVel;
-  }
+  m.rateControl();
 }

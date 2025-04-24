@@ -75,6 +75,8 @@ auto APU::Triangle::calculateMidi() -> void {
 }
 
 auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
+  if (m.rateLimit()) return;
+
   if (m.noteOn != m.lastNoteOn) {
     if (m.lastNoteOn != 0) {
       // note off:
@@ -85,16 +87,17 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, 96);
       m.lastNoteOn = m.noteOn;
+      m.lastChan = m.noteChan;
     }
   }
 
-  if (m.noteOn == 0) {
-    return;
+  if (m.noteOn != 0) {
+    // adjust pitch bend:
+    if (m.noteWheel != m.lastWheel) {
+      emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
+      m.lastWheel = m.noteWheel;
+    }
   }
 
-  // adjust pitch bend:
-  if (m.noteWheel != m.lastWheel) {
-    emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
-    m.lastWheel = m.noteWheel;
-  }
+  m.rateControl();
 }

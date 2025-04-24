@@ -337,10 +337,10 @@ auto APU::midiReset() -> void {
     midiEmitter(0x80 | pulse2.m.chans[3], pulse2.m.lastNoteOn, 0x00);
   }
   if (triangle.m.lastNoteOn) {
-    midiEmitter(0x80 | triangle.m.lastChan, triangle.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | triangle.m.noteChan, triangle.m.lastNoteOn, 0x00);
   }
   if (noise.m.lastNoteOn) {
-    midiEmitter(0x80 | noise.m.lastChan, noise.m.lastNoteOn, 0x00);
+    midiEmitter(0x80 | noise.m.noteChan, noise.m.lastNoteOn, 0x00);
   }
   if (dmc.m.lastNoteOn) {
     midiEmitter(0x80 | dmc.m.lastChan, dmc.m.lastNoteOn, 0x00);
@@ -382,7 +382,12 @@ auto APU::midiInit() -> void {
 
   midiReset();
 
-  u8 dutyPCs[4] = { 81, 82, 80, 87 };
+  u8 dutyPCs[4] = {
+    81, // sawtooth lead
+    63, // synth brass 2
+    80, // square wave lead
+    87  // bass lead
+  };
   for (int n = 0; n < 4; n++) {
     pulse1.m.chans[n] = n;
     pulse2.m.chans[n] = n+4;
@@ -404,9 +409,9 @@ auto APU::midiInit() -> void {
 
   triangle.m.chans[0] = 8;
   midi->delay();
-  midiEmitter(0xC0 | triangle.m.chans[0], 39, 0);
+  midiEmitter(0xC0 | triangle.m.chans[0], 33, 0); // fingered bass
   midi->delay();
-  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x60); // vol
+  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x50); // vol
   midi->delay();
   midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
 
@@ -418,12 +423,33 @@ auto APU::midiInit() -> void {
 
   // DMC orchestra hit
   midi->delay();
-  midiEmitter(0xC0 | 10, 55, 0);
+  midiEmitter(0xC0 | 10, 55, 0); // orchestra hit
   midi->delay();
   midiEmitter(0xB0 | 10, 0x07, 0x60); // vol
 
   midiMessages = 0;
 }
+
+auto APU::MidiState::rateLimit() -> bool {
+  // MIDI message takes 0.000960000 sec (= 3 bytes / 3,125 bytes / sec)
+  //    APU cycle takes 0.000000560 sec
+  // means we can send one MIDI message every 1714.28571429 APU clock cycles:
+  if (clocks++ < 1715*messages) {
+    return true;
+  }
+
+  // start counting MIDI messages emitted:
+  apu.midiMessages = 0;
+  return false;
+}
+
+auto APU::MidiState::rateControl() -> void {
+  // record how many MIDI messages were emitted:
+  messages = apu.midiMessages;
+  // start counting APU clock cycles until we can generate more MIDI messages:
+  clocks = 0;
+}
+
 
 auto APU::generateMidi() -> void {
   // always update latest desired midi state:
@@ -433,24 +459,12 @@ auto APU::generateMidi() -> void {
   noise.calculateMidi();
   dmc.calculateMidi();
 
-#if 1
-  // MIDI message takes 0.000960000 sec (= 3 bytes / 3,125 bytes / sec)
-  //    APU cycle takes 0.000000560 sec
-  // means we can send one MIDI message every 1714.28571429 APU clock cycles:
-  if (midiClocks++ < 1714*3*midiMessages) {
-    return;
-  }
-#endif
-
-  midiClocks = 0;
-  midiMessages = 0;
-
   // emit messages to transition to desired midi state:
+  dmc.generateMidi( midiEmitter );
+  noise.generateMidi( midiEmitter );
+  triangle.generateMidi( midiEmitter );
   pulse1.generateMidi( midiEmitter );
   pulse2.generateMidi( midiEmitter );
-  triangle.generateMidi( midiEmitter );
-  noise.generateMidi( midiEmitter );
-  dmc.generateMidi( midiEmitter );
 }
 
 }

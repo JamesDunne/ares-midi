@@ -104,6 +104,8 @@ auto APU::Noise::calculateMidi() -> void {
 }
 
 auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
+  if (m.rateLimit()) return;
+
   if ((m.noteOn != m.lastNoteOn) || (m.noteVel != m.lastVel) || (m.noteNew)) {
     if (m.lastNoteOn != 0) {
       // note off:
@@ -113,9 +115,12 @@ auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
     if (m.noteOn != 0 && m.noteVel != 0 || m.noteNew) {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, m.noteVel);
+      m.lastChan = m.noteChan;
       m.lastNoteOn = m.noteOn;
       m.lastVel = m.noteVel;
       m.noteNew = 0;
     }
   }
+  
+  m.rateControl();
 }

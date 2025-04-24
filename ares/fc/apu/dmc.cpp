@@ -4,6 +4,7 @@ auto APU::DMC::start() -> void {
     lengthCounter = (lengthLatch << 4) + 1;
     if (lengthCounter > 1) {
       m.triggered = true;
+      clocksSinceStart = 1;
     }
 
     if (!dmaBufferValid)
@@ -12,11 +13,17 @@ auto APU::DMC::start() -> void {
 }
 
 auto APU::DMC::stop() -> void {
+  if (lengthCounter != 0) {
+    m.triggered = 0;
+    m.triggeredStop = 1;
+  }
   lengthCounter = 0;
 }
 
 auto APU::DMC::clock() -> n8 {
   n8 result = dacLatch;
+
+  if (clocksSinceStart > 0) clocksSinceStart++;
 
   if(--periodCounter == 0) {
     if(sampleValid) {
@@ -87,7 +94,7 @@ auto APU::DMC::power(bool reset) -> void {
     sampleDescriptors.insert(0x34EAE0720494FA43ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=61; v=96; });
 
     // fortress timpani hits
-    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=41 + (p - 0xE)*2; v=96; });
+    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=41 + (p - 0xE)*2; v=112; });
   }
 
   // Super-C:
@@ -98,19 +105,28 @@ auto APU::DMC::power(bool reset) -> void {
     sampleDescriptors.insert(0x7CE12344BCC44AC8ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
 
     // toms:
-    sampleDescriptors.insert(0x621CFEA6F56DECB0ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=array<u8[3]>{48,47,45}[0xF-p]; v=96; });
+    sampleDescriptors.insert(0x621CFEA6F56DECB0ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=array<u8[3]>{48,47,45}[0xF-p]; v=112; });
 
     // orchestra hits:
-    sampleDescriptors.insert(0x479ac6554ae6ff14ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=38+12; v=96; /* (D-2) p=0xD */ });
-    sampleDescriptors.insert(0x82e05ddd4aaaff9aULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=39+12; v=96; /* (D#2) p=0xD */ });
-    sampleDescriptors.insert(0x02e6bcfdd42e1039ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=40+12; v=96; /* (E-2) p=0xD */ });
-    sampleDescriptors.insert(0xb96362a05fb2bae8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=41+12; v=96; /* (F-2) p=0xD */ });
-    sampleDescriptors.insert(0x64d735a09b5ea750ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=43+12; v=96; /* (G-2) p=0xD */ });
-    sampleDescriptors.insert(0xbbfc22343c6e44b8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=44+12; v=96; /* (G#2) p=0xD */ });
-    sampleDescriptors.insert(0xe183be8c0e51c7c7ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=45+12; v=96; /* (A-2) p=0xD */ });
-    sampleDescriptors.insert(0x616ed59931f78d52ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=46+12; v=96; /* (A#2) p=0xD */ });
-    sampleDescriptors.insert(0xb050ad75c62b7c7bULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=47+12; v=96; /* (B-2) p=0xD */ });
-    sampleDescriptors.insert(0x1289ec66c4831269ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=48+12; v=96; /* (C-3) p=0xD */ });
+    sampleDescriptors.insert(0x479ac6554ae6ff14ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=38+12; v=112; /* (D-2) p=0xD */ });
+    sampleDescriptors.insert(0x82e05ddd4aaaff9aULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=39+12; v=112; /* (D#2) p=0xD */ });
+    sampleDescriptors.insert(0x02e6bcfdd42e1039ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=40+12; v=112; /* (E-2) p=0xD */ });
+    sampleDescriptors.insert(0xb96362a05fb2bae8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=41+12; v=112; /* (F-2) p=0xD */ });
+    sampleDescriptors.insert(0x64d735a09b5ea750ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=43+12; v=112; /* (G-2) p=0xD */ });
+    sampleDescriptors.insert(0xbbfc22343c6e44b8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=44+12; v=112; /* (G#2) p=0xD */ });
+    sampleDescriptors.insert(0xe183be8c0e51c7c7ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=45+12; v=112; /* (A-2) p=0xD */ });
+    sampleDescriptors.insert(0x616ed59931f78d52ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=46+12; v=112; /* (A#2) p=0xD */ });
+    sampleDescriptors.insert(0xb050ad75c62b7c7bULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=47+12; v=112; /* (B-2) p=0xD */ });
+    sampleDescriptors.insert(0x1289ec66c4831269ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=48+12; v=112; /* (C-3) p=0xD */ });
+  }
+
+  // Contra:
+  {
+    // kick drum:
+    sampleDescriptors.insert(0xCDA8A7E459A39D2EULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
+    // snare drum:
+    sampleDescriptors.insert(0x2A62B26DD9F0BA73ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
+
   }
 }
 
@@ -132,8 +148,9 @@ auto APU::DMC::setDMABuffer(n8 data) -> void {
 }
 
 auto APU::DMC::calculateMidi() -> void {
-  if (m.triggered) {
+  if (m.triggered && clocksSinceStart > 16) {
     // sample started:
+    m.triggered = 0;
 
     // read the bytes of the sample and FNV-64a hash its contents:
     n16 a = (0x4000 + (addressLatch << 6));
@@ -228,24 +245,27 @@ auto APU::DMC::calculateMidi() -> void {
     m.lastAddressLatch = addressLatch;
     m.lastLengthLatch = lengthLatch;
     m.lastPeriod = period;
-  } else if (!loopMode && lengthCounter == 0 && m.lastLengthCounter != 0) {
+  }
+  if (!loopMode && lengthCounter == 0 && m.lastLengthCounter != 0) {
     // sample naturally stopped (length exhausted):
     m.noteOn = 0;
     m.noteVel = 0;
     //printf("dmc: stop  a=%02X, l=%02X, p=%1X\n", (u8)m.lastAddressLatch, (u8)m.lastLengthLatch, (u8)m.lastPeriod);
-  } else if (m.triggeredStop) {
+  }
+  if (m.triggeredStop) {
     // sample explicitly stopped:
     m.noteOn = 0;
     m.noteVel = 0;
     //printf("dmc: stop  a=%02X, l=%02X, p=%1X\n", (u8)m.lastAddressLatch, (u8)m.lastLengthLatch, (u8)m.lastPeriod);
   }
 
-  m.triggered = false;
   m.triggeredStop = false;
   m.lastLengthCounter = lengthCounter;
 }
 
 auto APU::DMC::generateMidi(MIDIEmitter& emit) -> void {
+  if (m.rateLimit()) return;
+
   if ((m.noteOn != m.lastNoteOn) || (m.noteVel != m.lastVel) || (m.noteNew)) {
     if (m.lastNoteOn != 0) {
       // note off:
@@ -261,4 +281,6 @@ auto APU::DMC::generateMidi(MIDIEmitter& emit) -> void {
       m.noteNew = 0;
     }
   }
+
+  m.rateControl();
 }
