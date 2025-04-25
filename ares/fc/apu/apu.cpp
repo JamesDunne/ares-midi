@@ -102,6 +102,8 @@ auto APU::power(bool reset) -> void {
   dmc.power(reset);
   frame.power(reset);
 
+  midiInit();
+
   setIRQ();
 }
 
@@ -153,12 +155,14 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case 0x4002: {
     pulse1.period.bit(0,7) = data.bit(0,7);
     pulse1.sweep.pulsePeriod.bit(0,7) = data.bit(0,7);
+    pulse1.m.periodWriteCountdown = 256;
     return;
   }
 
   case 0x4003: {
     pulse1.period.bit(8,10) = data.bit(0,2);
     pulse1.sweep.pulsePeriod.bit(8,10) = data.bit(0,2);
+    pulse1.m.periodWriteCountdown = 256;
 
     pulse1.dutyCounter = 0;
     pulse1.envelope.reloadDecay = true;
@@ -188,12 +192,14 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case 0x4006: {
     pulse2.period.bit(0,7) = data.bit(0,7);
     pulse2.sweep.pulsePeriod.bit(0,7) = data.bit(0,7);
+    pulse2.m.periodWriteCountdown = 256;
     return;
   }
 
   case 0x4007: {
     pulse2.period.bit(8,10) = data.bit(0,2);
     pulse2.sweep.pulsePeriod.bit(8,10) = data.bit(0,2);
+    pulse2.m.periodWriteCountdown = 256;
 
     pulse2.dutyCounter = 0;
     pulse2.envelope.reloadDecay = true;
@@ -210,11 +216,13 @@ auto APU::writeIO(n16 address, n8 data) -> void {
 
   case 0x400a: {
     triangle.period.bit(0,7) = data.bit(0,7);
+    triangle.m.periodWriteCountdown = 256;
     return;
   }
 
   case 0x400b: {
     triangle.period.bit(8,10) = data.bit(0,2);
+    triangle.m.periodWriteCountdown = 256;
 
     triangle.reloadLinear = true;
 
@@ -367,20 +375,17 @@ auto APU::midiReset() -> void {
 
 auto APU::midiInit() -> void {
   midiClocks = 0;
+  midiMessages = 0;
 
-  pulse1.m.noteOn = 0;
-  pulse2.m.noteOn = 0;
-  triangle.m.noteOn = 0;
-  noise.m.noteOn = 0;
-  dmc.m.noteOn = 0;
-
-  pulse1.m.lastNoteOn = 0;
-  pulse2.m.lastNoteOn = 0;
-  triangle.m.lastNoteOn = 0;
-  noise.m.lastNoteOn = 0;
-  dmc.m.lastNoteOn = 0;
-
+  // reset MIDI:
   midiReset();
+
+  // initialize MidiStates:
+  pulse1.m = {};
+  pulse2.m = {};
+  triangle.m = {};
+  noise.m = {};
+  dmc.m = {};
 
   u8 dutyPCs[4] = {
     81, // sawtooth lead

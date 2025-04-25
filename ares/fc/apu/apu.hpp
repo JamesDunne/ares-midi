@@ -30,6 +30,8 @@ struct APU : Thread {
     u8  noteVel;
     n14 noteWheel;
     double noteFreq;
+    u2  noteDuty;
+    u32 clocksSinceNoteOn;
 
     u8  lastNoteOn;
     u8  lastChan;
@@ -37,11 +39,8 @@ struct APU : Thread {
     n14 lastWheel;
     double lastFreq;
 
-    u8  lastTriggeredPeriod;
-    u32 lastTriggeredVolume;
+    u32 periodWriteCountdown;
 
-    u2  lastDuty;
-    u32 clocksSinceDutyChange;
     u16 lastPeriod;
     u32 lastCycleVolume;
 

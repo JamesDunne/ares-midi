@@ -31,12 +31,18 @@ auto APU::Pulse::power(bool reset) -> void {
 }
 
 auto APU::Pulse::calculateMidi() -> void {
+  // don't sample the period too early when writes are spread across two registers and multiple clocks between:
+  if (m.periodWriteCountdown > 0) {
+    m.periodWriteCountdown--;
+    return;
+  }
+
   u32 volume = envelope.volume();
 
   if (!sweep.checkPeriod() || length.counter == 0 || sweep.pulsePeriod < 0x008) {
     // silence:
     m.noteOn = 0;
-    m.clocksSinceDutyChange = 0;
+    m.clocksSinceNoteOn = 0;
     return;
   }
 
@@ -53,33 +59,46 @@ auto APU::Pulse::calculateMidi() -> void {
   if (volume == 0) {
     v = 0;
   } else {
-    //v = 1024.0 / (15.0 / (double)volume + 10.0);
     v = 24.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
   }
 
-  // rate-limit duty changes:
-  if (m.clocksSinceDutyChange > 0) m.clocksSinceDutyChange++;
-  if (duty != m.lastDuty && m.noteOn != 0) {
-    if (m.clocksSinceDutyChange < 65000) {
-      // maintain note on existing channel
-    } else {
-      m.noteChan = m.chans[duty];
-    }
-    m.clocksSinceDutyChange = 1;
-  } else {
-    m.noteChan = m.chans[duty];
-  }
-  m.lastDuty = duty;
+  u8 currNoteOn = m.noteOn;
 
   // set desired midi state:
   m.applyNoteWheel(n);
   m.noteVel = v;
+
+  // rate-limit duty changes:
+  if (m.clocksSinceNoteOn > 0) m.clocksSinceNoteOn++;
+  if (currNoteOn == 0 || m.noteOn != currNoteOn) {
+    // first time note on:
+    m.noteDuty = duty;
+    m.noteChan = m.chans[m.noteDuty];
+    m.clocksSinceNoteOn = 1;
+  }
+
+  if (m.clocksSinceNoteOn < 131072) {
+    // maintain initial duty but keep track of latest duty so we can switch once:
+    m.noteDuty = duty;
+  } else {
+    // we're allowed only one duty change after the initial note on:
+    m.noteChan = m.chans[m.noteDuty];
+  }
+
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
   if (m.rateLimit()) return;
 
   u8 lastChan = m.lastChan;
+
+  if (m.lastNoteOn != 0 && m.noteVel == 0 && m.lastVel != 0) {
+    // note off when velocity goes to zero:
+    emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
+    m.lastNoteOn = 0;
+    m.lastFreq = 0;
+    m.lastVel = 0;
+  }
 
   if (m.noteOn != m.lastNoteOn || m.noteChan != m.lastChan) {
     if (m.lastNoteOn != 0) {
@@ -88,7 +107,7 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
       m.lastNoteOn = 0;
       m.lastFreq = 0;
     }
-    if (m.noteOn != 0) {
+    if (m.noteOn != 0 && m.noteVel != 0) {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, 96);
       m.lastNoteOn = m.noteOn;
@@ -97,7 +116,7 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     }
   }
 
-  if (m.noteOn != 0) {
+  if (m.noteOn != 0 && m.noteVel != 0) {
     // adjust pitch bend:
     if (m.noteWheel != m.lastWheel || m.noteChan != lastChan) {
       emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);

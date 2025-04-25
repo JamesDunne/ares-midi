@@ -65,7 +65,6 @@ auto APU::Noise::calculateMidi() -> void {
 
   // trigger new note:
   m.noteNew = 1;
-  m.lastTriggeredVolume = volume;
 
   // velocity (0..127):
   int v;
@@ -105,11 +104,19 @@ auto APU::Noise::calculateMidi() -> void {
 auto APU::Noise::generateMidi(MIDIEmitter &emit) -> void {
   if (m.rateLimit()) return;
 
+  if (m.lastNoteOn != 0 && m.noteVel == 0 && m.lastVel != 0) {
+    // note off when velocity goes to zero:
+    emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
+    m.lastNoteOn = 0;
+    m.lastVel = 0;
+  }
+
   if ((m.noteOn != m.lastNoteOn) || (m.noteVel != m.lastVel) || (m.noteNew)) {
     if (m.lastNoteOn != 0) {
       // note off:
       emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
       m.lastNoteOn = 0;
+      m.lastVel = 0;
     }
     if (m.noteOn != 0 && m.noteVel != 0 || m.noteNew) {
       // note on:

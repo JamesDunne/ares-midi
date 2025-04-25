@@ -33,6 +33,12 @@ auto APU::Triangle::power(bool reset) -> void {
 }
 
 auto APU::Triangle::calculateMidi() -> void {
+  // don't sample the period too early when writes are spread across two registers and multiple clocks between:
+  if (m.periodWriteCountdown > 0) {
+    m.periodWriteCountdown--;
+    return;
+  }
+
   // velocity (0..127):
   int v = 96;
 
