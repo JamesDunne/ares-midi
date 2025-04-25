@@ -36,6 +36,7 @@ auto APU::Pulse::calculateMidi() -> void {
   if (!sweep.checkPeriod() || length.counter == 0 || sweep.pulsePeriod < 0x008) {
     // silence:
     m.noteOn = 0;
+    m.clocksSinceDutyChange = 0;
     return;
   }
 
@@ -56,25 +57,23 @@ auto APU::Pulse::calculateMidi() -> void {
     v = 24.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
   }
 
-  // nearest whole semitone:
-  double k = round(n);
-  if (m.noteOn != 0 && abs(k - (double)m.noteOn) < 2.0) {
-    // use the last note if it's not too far away to avoid alternating note off/on too close to a center pitch vibrato:
-    k = m.noteOn;
+  // rate-limit duty changes:
+  if (m.clocksSinceDutyChange > 0) m.clocksSinceDutyChange++;
+  if (duty != m.lastDuty && m.noteOn != 0) {
+    if (m.clocksSinceDutyChange < 65000) {
+      // maintain note on existing channel
+    } else {
+      m.noteChan = m.chans[duty];
+    }
+    m.clocksSinceDutyChange = 1;
+  } else {
+    m.noteChan = m.chans[duty];
   }
-  // pitch difference in semitones (-0.5 <= b < +0.5):
-  double b = (n - k);
-
-  // midi note:
-  u8 kn = (u8)(int)k;
-  // pitch bend: (assuming +/- 2 semitone range)
-  n14 wheel = 8192 + (b * 4096.0);
+  m.lastDuty = duty;
 
   // set desired midi state:
-  m.noteOn = kn;
-  m.noteChan = m.chans[duty];
+  m.applyNoteWheel(n);
   m.noteVel = v;
-  m.noteWheel = wheel;
 }
 
 auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
@@ -87,12 +86,14 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
       // note off:
       emit(0x80 | m.lastChan, m.lastNoteOn, 0x00);
       m.lastNoteOn = 0;
+      m.lastFreq = 0;
     }
     if (m.noteOn != 0) {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, 96);
       m.lastNoteOn = m.noteOn;
       m.lastChan = m.noteChan;
+      m.lastFreq = m.noteFreq;
     }
   }
 
@@ -101,6 +102,7 @@ auto APU::Pulse::generateMidi(MIDIEmitter &emit) -> void {
     if (m.noteWheel != m.lastWheel || m.noteChan != lastChan) {
       emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
       m.lastWheel = m.noteWheel;
+      m.lastFreq = m.noteFreq;
     }
     
     // adjust channel volumes:

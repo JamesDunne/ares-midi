@@ -53,25 +53,10 @@ auto APU::Triangle::calculateMidi() -> void {
     return;
   }
 
-  // integer part:
-  double k = round(n);
-  // fractional part (-0.5 <= n < +0.5):
-  double b = (n - k);
-
-  // midi note:
-  u8 kn = (u8)(int)k;
-  if (m.noteOn != 0 && abs(k - (double)m.noteOn) < 2.0) {
-    // use the last note if it's not too far away to avoid alternating note off/on too close to a center pitch vibrato:
-    k = m.noteOn;
-  }
-  // pitch bend: (assuming +/- 2 semitone range)
-  n14 wheel = 8192 + (b * 4096.0);
-
   // set desired midi state:
-  m.noteOn = kn;
+  m.applyNoteWheel(n);
   m.noteChan = m.chans[0];
   m.noteVel = v;
-  m.noteWheel = wheel;
 }
 
 auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
@@ -82,12 +67,14 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
       // note off:
       emit(0x80 | m.noteChan, m.lastNoteOn, 0x00);
       m.lastNoteOn = 0;
+      m.lastFreq = 0;
     }
     if (m.noteOn != 0) {
       // note on:
       emit(0x90 | m.noteChan, m.noteOn, 96);
       m.lastNoteOn = m.noteOn;
       m.lastChan = m.noteChan;
+      m.lastFreq = m.noteFreq;
     }
   }
 
@@ -96,6 +83,7 @@ auto APU::Triangle::generateMidi(MIDIEmitter &emit) -> void {
     if (m.noteWheel != m.lastWheel) {
       emit(0xE0 | m.noteChan, m.noteWheel & 0x7F, (m.noteWheel >> 7) & 0x7F);
       m.lastWheel = m.noteWheel;
+      m.lastFreq = m.noteFreq;
     }
   }
 

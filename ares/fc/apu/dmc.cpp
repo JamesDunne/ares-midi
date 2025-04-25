@@ -78,55 +78,119 @@ auto APU::DMC::power(bool reset) -> void {
   // SMB3:
   {
     // kick drum:
-    sampleDescriptors.insert(0x82A9954CEA45D76AULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
+    sampleDescriptors.insert(0x82A9954CEA45D76AULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=36; v=96; });
     // snare drum:
-    sampleDescriptors.insert(0x5875F05F7B1D6EE7ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
+    sampleDescriptors.insert(0x5875F05F7B1D6EE7ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=38; v=96; });
     // tom:
-    sampleDescriptors.insert(0xF82E24ED29B23E6DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=47 + (p - 0xE); v=96; });
+    sampleDescriptors.insert(0xF82E24ED29B23E6DULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=47 + (p - 0xE); v=96; });
     // high wood block:
-    sampleDescriptors.insert(0x715DDEF53031FC1BULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=77 - (p - 0xE); v=96; });
+    sampleDescriptors.insert(0x715DDEF53031FC1BULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=77 - (p - 0xE); v=96; });
     // timbale:
-    sampleDescriptors.insert(0x14E85FA4D6211223ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=66 - (p - 0xE); v=96; });
+    sampleDescriptors.insert(0x14E85FA4D6211223ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=66 - (p - 0xE); v=96; });
 
     // block explosion long
-    sampleDescriptors.insert(0x530AD3FAABD3E6CDULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=61; v=96; });
+    sampleDescriptors.insert(0x530AD3FAABD3E6CDULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=61; v=96; });
     // block explosion short
-    sampleDescriptors.insert(0x34EAE0720494FA43ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=61; v=96; });
+    sampleDescriptors.insert(0x34EAE0720494FA43ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=61; v=96; });
 
     // fortress timpani hits
-    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=41 + (p - 0xE)*2; v=112; });
+    sampleDescriptors.insert(0x05B216622992F30DULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=41 + (p - 0xE)*2; v=112; });
   }
 
   // Super-C:
   {
     // kick drum:
-    sampleDescriptors.insert(0x7CF96FBF8992F1B8ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
+    sampleDescriptors.insert(0x7CF96FBF8992F1B8ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=36; v=96; });
     // snare drum:
-    sampleDescriptors.insert(0x7CE12344BCC44AC8ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
+    sampleDescriptors.insert(0x7CE12344BCC44AC8ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=38; v=96; });
 
     // toms:
-    sampleDescriptors.insert(0x621CFEA6F56DECB0ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=array<u8[3]>{48,47,45}[0xF-p]; v=112; });
+    sampleDescriptors.insert(0x621CFEA6F56DECB0ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=array<u8[3]>{48,47,45}[0xF-p]; v=112; });
 
     // orchestra hits:
-    sampleDescriptors.insert(0x479ac6554ae6ff14ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=38+12; v=112; /* (D-2) p=0xD */ });
-    sampleDescriptors.insert(0x82e05ddd4aaaff9aULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=39+12; v=112; /* (D#2) p=0xD */ });
-    sampleDescriptors.insert(0x02e6bcfdd42e1039ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=40+12; v=112; /* (E-2) p=0xD */ });
-    sampleDescriptors.insert(0xb96362a05fb2bae8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=41+12; v=112; /* (F-2) p=0xD */ });
-    sampleDescriptors.insert(0x64d735a09b5ea750ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=43+12; v=112; /* (G-2) p=0xD */ });
-    sampleDescriptors.insert(0xbbfc22343c6e44b8ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=44+12; v=112; /* (G#2) p=0xD */ });
-    sampleDescriptors.insert(0xe183be8c0e51c7c7ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=45+12; v=112; /* (A-2) p=0xD */ });
-    sampleDescriptors.insert(0x616ed59931f78d52ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=46+12; v=112; /* (A#2) p=0xD */ });
-    sampleDescriptors.insert(0xb050ad75c62b7c7bULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=47+12; v=112; /* (B-2) p=0xD */ });
-    sampleDescriptors.insert(0x1289ec66c4831269ULL, [](n4 p, u8& c, u8& n, u8& v){ c = 10; n=48+12; v=112; /* (C-3) p=0xD */ });
+    sampleDescriptors.insert(0x479ac6554ae6ff14ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=38+12; v=112; /* (D-2) p=0xD */ });
+    sampleDescriptors.insert(0x82e05ddd4aaaff9aULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=39+12; v=112; /* (D#2) p=0xD */ });
+    sampleDescriptors.insert(0x02e6bcfdd42e1039ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=40+12; v=112; /* (E-2) p=0xD */ });
+    sampleDescriptors.insert(0xb96362a05fb2bae8ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=41+12; v=112; /* (F-2) p=0xD */ });
+    sampleDescriptors.insert(0x64d735a09b5ea750ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=43+12; v=112; /* (G-2) p=0xD */ });
+    sampleDescriptors.insert(0xbbfc22343c6e44b8ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=44+12; v=112; /* (G#2) p=0xD */ });
+    sampleDescriptors.insert(0xe183be8c0e51c7c7ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=45+12; v=112; /* (A-2) p=0xD */ });
+    sampleDescriptors.insert(0x616ed59931f78d52ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=46+12; v=112; /* (A#2) p=0xD */ });
+    sampleDescriptors.insert(0xb050ad75c62b7c7bULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=47+12; v=112; /* (B-2) p=0xD */ });
+    sampleDescriptors.insert(0x1289ec66c4831269ULL, [](n4 p, u8& c, double& n, u8& v){ c=10; n=48+12; v=112; /* (C-3) p=0xD */ });
   }
 
   // Contra:
   {
     // kick drum:
-    sampleDescriptors.insert(0xCDA8A7E459A39D2EULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=36; v=96; });
+    sampleDescriptors.insert(0xCDA8A7E459A39D2EULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=36; v=96; });
     // snare drum:
-    sampleDescriptors.insert(0x2A62B26DD9F0BA73ULL, [](n4 p, u8& c, u8& n, u8& v){ c=9; n=38; v=96; });
+    sampleDescriptors.insert(0x2A62B26DD9F0BA73ULL, [](n4 p, u8& c, double& n, u8& v){ c=9; n=38; v=96; });
+  }
+  
+  // Fester's Quest:
+  {
+    // slap bass:
+    sampleDescriptors.insert(0x0c18c4a8aa28f924ULL, [](n4 p, u8& c, double& n, u8& v){
+      c=11; v=112;
+      switch (p) {
+        case 0x3: n=29+0; break;
+        case 0x4: n=31+0; break;
+        case 0x7: n=36+0; break;
+        case 0x8: n=38+0; break;
+        case 0xA: n=43+0; break;
+        case 0xC: n=48+0; break;
+        // unknown high note to detect
+        default: n = 72+12; break;
+      }
+    });
+    sampleDescriptors.insert(0x35f1ba1464004391ULL, [](n4 p, u8& c, double& n, u8& v){
+      c=11; v=112;
+      switch (p) {
+        case 0x4: n=30+0; break;
+        case 0x5: n=32+0; break;
+        case 0x6: n=34+0; break;
+        case 0xD: n=51+0; break;
+        // unknown high note to detect
+        default: n = 72+12; break;
+      }
+    });
+    sampleDescriptors.insert(0x130afdd8a57fb3e8ULL, [](n4 p, u8& c, double& n, u8& v){
+      c=11; v=112;
+      switch (p) {
+        case 0x8: n=39+0; break;
+        case 0xB: n=46+0; break;
+        // unknown high note to detect
+        default: n = 72+12; break;
+      }
+    });
+    sampleDescriptors.insert(0xd27417903aa611b5ULL, [](n4 p, u8& c, double& n, u8& v){
+      c=11; v=112;
+      switch (p) {
+        case 0xC: n=50+0; break;
+        // unknown high note to detect
+        default: n = 72+12; break;
+      }
+    });
 
+    // orchestra hits:
+    sampleDescriptors.insert(0x2d1074160f8eba58ULL, [](n4 p, u8& c, double& n, u8& v){
+      c=10; v=112;
+      switch (p) {
+        case 0x9: n=29+12; break;
+        case 0xB: n=33+12; break;
+        // unknown high note to detect
+        default: n = 72+12; break;
+      }
+    });
+    sampleDescriptors.insert(0xdee92674676cfbdeULL, [](n4 p, u8& c, double& n, u8& v){
+      c=10; v=112;
+      switch (p) {
+        case 0xC: n=34+12; break;
+        // unknown high note to detect
+        default: n=72+12; break;
+      }
+    });
   }
 }
 
@@ -166,7 +230,10 @@ auto APU::DMC::calculateMidi() -> void {
     // look up sample mapping based on hash of its contents:
     auto maybeDesc = sampleDescriptors.find(h);
     if (maybeDesc) {
-      maybeDesc.get()(period, m.noteChan, m.noteOn, m.noteVel);
+      double n;
+      maybeDesc.get()(period, m.noteChan, n, m.noteVel);
+
+      m.applyNoteWheel(n);
 
       //printf("dmc: 0x%016llX: a=%02X, l=%02X, p=%1X found\n", h, (u8)addressLatch, (u8)lengthLatch, (u8)period);
     } else {

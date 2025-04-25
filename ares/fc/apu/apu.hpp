@@ -29,16 +29,19 @@ struct APU : Thread {
     u8  noteChan;
     u8  noteVel;
     n14 noteWheel;
+    double noteFreq;
 
     u8  lastNoteOn;
     u8  lastChan;
     u8  lastVel;
     n14 lastWheel;
+    double lastFreq;
 
     u8  lastTriggeredPeriod;
     u32 lastTriggeredVolume;
 
     u2  lastDuty;
+    u32 clocksSinceDutyChange;
     u16 lastPeriod;
     u32 lastCycleVolume;
 
@@ -54,6 +57,8 @@ struct APU : Thread {
     
     auto rateLimit() -> bool;
     auto rateControl() -> void;
+    
+    auto applyNoteWheel(double n) -> void;
     
     u32 messages;
     u32 clocks;
@@ -209,7 +214,7 @@ struct APU : Thread {
     auto generateMidi(MIDIEmitter&) -> void;
     MidiState m;
 
-    using generateMidiFromPeriod = function<auto (n4 period, u8& chanOut, u8& noteOut, u8& velOut) -> void>;
+    using generateMidiFromPeriod = function<auto (n4 period, u8& chanOut, double& noteOut, u8& velOut) -> void>;
 
     nall::map<u64, generateMidiFromPeriod> sampleDescriptors;
     nall::map<u64, nall::map<n4, bool> > samplesMissing;

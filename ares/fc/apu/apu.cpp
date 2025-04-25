@@ -427,6 +427,12 @@ auto APU::midiInit() -> void {
   midi->delay();
   midiEmitter(0xB0 | 10, 0x07, 0x60); // vol
 
+  // DMC slap bass
+  midi->delay();
+  midiEmitter(0xC0 | 11, 37, 0); // slap bass 2
+  midi->delay();
+  midiEmitter(0xB0 | 11, 0x07, 0x60); // vol
+
   midiMessages = 0;
 }
 
@@ -450,6 +456,36 @@ auto APU::MidiState::rateControl() -> void {
   clocks = 0;
 }
 
+auto APU::MidiState::applyNoteWheel(double n) -> void {
+  double k;
+
+  if (noteOn != 0) {
+    // continuing note:
+
+    // try to maintain current note:
+    k = (double)noteOn;
+    if (fabs(n - noteFreq) >= 0.8) {
+      // changed too much from last frequency, start a new note:
+      k = round(n);
+    } else if (fabs(n - k) >= 2.0) {
+      // if we've strayed out of pitch bend range, start a new note:
+      k = round(n);
+    }
+  } else {
+    // start a new note:
+    k = round(n);
+  }
+
+  // pitch difference in semitones (-2.0 <= b < +2.0):
+  double b = (n - k);
+
+  // midi note:
+  noteOn = (u8)(int)k;
+  // pitch bend: (assuming +/- 2 semitone range)
+  noteWheel = 8192 + (b * 4096.0);
+  // remember actual frequency:
+  noteFreq = n;
+}
 
 auto APU::generateMidi() -> void {
   // always update latest desired midi state:

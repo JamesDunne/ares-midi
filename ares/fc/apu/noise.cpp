@@ -69,8 +69,7 @@ auto APU::Noise::calculateMidi() -> void {
 
   // velocity (0..127):
   int v;
-  //v = 1024.0 / (15.0 / (double)volume + 10.0);
-  v = 16.0 + 384.0 * 95.88 / (8128.0 / (volume*2.0) + 100.0);
+  v = 0.0 + 384.0 * 159.79 / (100.0 + 1.0 / ((double)volume / 12241.0));
 
   // midi note:
   u8 kn;
