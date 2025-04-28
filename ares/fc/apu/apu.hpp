@@ -194,6 +194,11 @@ struct APU : Thread {
     n4  period;
     n1  shortMode;
     n15 lfsr;
+
+    auto dump() -> void;
+    auto dumpMidi(u8 cmd, u8 d1, u8 d2) -> void;
+    file_buffer f;
+    u64 cycles;
   } noise;
 
   struct DMC {

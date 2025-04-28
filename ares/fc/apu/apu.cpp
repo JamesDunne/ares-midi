@@ -235,12 +235,14 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     noise.envelope.useSpeedAsVolume = data.bit(4);
     noise.length.setHalt(frame.lengthClocking(), data.bit(5));
     noise.envelope.loopMode = data.bit(5);
+    noise.dump();
     return;
   }
 
   case 0x400e: {
     noise.period = data.bit(0,3);
     noise.shortMode = data.bit(7);
+    noise.dump();
     return;
   }
 
@@ -248,6 +250,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     noise.envelope.reloadDecay = true;
 
     noise.length.setCounter(frame.lengthClocking(), data.bit(3, 7));
+    noise.dump();
     return;
   }
 
@@ -281,6 +284,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     pulse2.length.setEnable(data.bit(1));
     triangle.length.setEnable(data.bit(2));
     noise.length.setEnable(data.bit(3));
+    noise.dump();
     if (data.bit(4) == 0) dmc.stop();
     if (data.bit(4) == 1) dmc.start();
 
@@ -483,6 +487,9 @@ auto APU::MidiState::applyNoteWheel(double n) -> void {
 
   // pitch difference in semitones (-2.0 <= b < +2.0):
   double b = (n - k);
+  if (fabs(b) < 0.15) {
+    b = 0.0;
+  }
 
   // midi note:
   noteOn = (u8)(int)k;

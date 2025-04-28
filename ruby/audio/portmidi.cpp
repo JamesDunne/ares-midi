@@ -82,6 +82,7 @@ auto init() -> void {
 
 auto writeShort(s32 msg) -> void {
   static PtTimestamp lastTs = 0;
+  const char *spaces = "                                                                                                                ";
 
   if (!stream) {
     return;
@@ -93,7 +94,7 @@ auto writeShort(s32 msg) -> void {
   PtTimestamp ts;
   if (msg == 0xFFFFFFFF) {
 //    NSLog(@"midi: delay");
-    lastTs = Pt_Time();
+    PtTimestamp lastTs = Pt_Time();
     do {
       ts = Pt_Time();
     } while ((ts - lastTs) <= 2);
@@ -101,14 +102,12 @@ auto writeShort(s32 msg) -> void {
     return;
   }
 
-  lastTs = ts = Pt_Time();
+  ts = Pt_Time();
 
-//  if ((msg&0xF0) >= 0xB0 && (msg&0xF0) <= 0xC0) {
-//    NSLog(@"midi: %02X %02X %02X", msg&0xFF, (msg>>8)&0xFF, (msg>>16)&0xFF);
-//  }
+//  NSLog(@"[%9u] %.*s%02X%02X%02X", ts, (msg&0x0F) * 7, spaces, msg&0xFF, (msg>>8)&0xFF, (msg>>16)&0xFF);
 
   do {
-    err = Pm_WriteShort(stream, ts, msg);
+    err = Pm_WriteShort(stream, 0, msg);
     if (err != pmNoError) {
       NSLog(@"portmidi: Pm_WriteShort err=%d: '%s'", err, Pm_GetErrorText(err));
     }
@@ -118,6 +117,8 @@ auto writeShort(s32 msg) -> void {
   if (err != pmNoError) {
     NSLog(@"portmidi: Pm_WriteShort err=%d: '%s'; no more retries", err, Pm_GetErrorText(err));
   }
+
+  lastTs = ts;
 }
 
 }
