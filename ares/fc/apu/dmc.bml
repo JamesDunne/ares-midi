@@ -305,19 +305,6 @@ sample
   channel:9
   program:0
   velocity:112
-  p0:0.0
-  p1:0.0
-  p2:0.0
-  p3:0.0
-  p4:0.0
-  p5:0.0
-  p6:0.0
-  p7:0.0
-  p8:0.0
-  p9:0.0
-  pA:0.0
-  pB:0.0
-  pC:0.0
   pD:45.0
   pE:47.0
   pF:48.0
@@ -623,3 +610,230 @@ sample
   pD:46.0
   pE:47.0
   pF:48.0
+
+// Batman - ROTJ - slap bass
+
+sample
+  fnv64a:0x443784ad28dd6ace
+  channel:11
+  volume:96
+  program:37
+  velocity:96
+  p7:25.0
+  p8:0.0
+  p9:0.0
+  pA:33.0
+  pB:0.0
+  pC:38.0
+  pD:0.0
+  pE:45.0
+  pF:50.0
+
+sample
+  fnv64a:0xaf120626f0ec1f00
+  channel:11
+  volume:96
+  program:37
+  velocity:96
+  p8:27.0
+  p9:0.0
+  pA:0.0
+  pB:0.0
+  pC:37.0
+  pD:41.0
+  pE:0.0
+  pF:0.0
+
+sample
+  fnv64a:0x9038438a0fc31fa7
+  channel:11
+  volume:96
+  program:37
+  velocity:96
+  p9:29.0
+  pA:31.0
+  pB:0.0
+  pC:36.0
+  pD:40.0
+  pE:43.0
+  pF:0.0
+
+sample
+  fnv64a:0x200bdfba0c06e6b4
+  channel:11
+  volume:96
+  program:37
+  velocity:96
+  pA:30.0
+  pB:0.0
+  pC:0.0
+  pD:39.0
+  pE:42.0
+  pF:0.0
+
+sample
+  fnv64a:0x863915f47021b366
+  channel:11
+  volume:96
+  program:37
+  velocity:96
+  pC:34.0
+  pD:0.0
+  pE:0.0
+  pF:0.0
+
+// Batman
+sample
+  name:Kick Drum
+  fnv64a:0x7bd558430a690e21
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pF:36.0
+
+sample
+  name:Snare Drum
+  fnv64a:0xa4ce710842cb00e8
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pF:38.0
+
+sample
+  name:Floor Tom
+  fnv64a:0xcbcb5281aae96b0b
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pC:43.0
+  pE:47.0
+  pF:48.0
+
+
+// Batman Returns
+sample
+  name:Kick Drum
+  fnv64a:0x7218140ba72c8079
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pF:36.0
+
+sample
+  name:Snare Drum
+  fnv64a:0xe96d3f62fe3878e5
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pF:38.0
+
+// Journey to Silius - bass
+sample
+  fnv64a:0xd77d1aa59c5d312e
+  channel:11
+  volume:96
+  program:34
+  velocity:96
+  p8:27.0
+  p9:0.0
+  pA:32.0
+  pB:0.0
+  pC:0.0
+  pD:41.0
+  pE:44.0
+  pF:0.0
+
+sample
+  fnv64a:0x13854525318ef597
+  channel:11
+  volume:96
+  program:34
+  velocity:96
+  p9:29.0
+  pA:31.0
+  pB:0.0
+  pC:36.0
+  pD:0.0
+  pE:43.0
+  pF:48.0
+
+sample
+  fnv64a:0xc9a17405881aaf5a
+  channel:11
+  volume:96
+  program:34
+  velocity:96
+  pA:33.0
+  pB:0.0
+  pC:0.0
+  pD:0.0
+  pE:45.0
+  pF:0.0
+
+sample
+  fnv64a:0xc9c9c62dde2cc29a
+  channel:11
+  volume:96
+  program:34
+  velocity:96
+  pC:34.0
+  pD:0.0
+  pE:0.0
+  pF:46.0
+
+sample
+  fnv64a:0xb53a4431fcfa1998
+  channel:11
+  volume:96
+  program:34
+  velocity:96
+  pD:39.0
+  pE:42.0
+  pF:0.0
+
+// Snake's Revenge
+sample
+  name:Toms
+  fnv64a:0x621cbfa6f56d81a3
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pB:41.0
+  pC:43.0
+  pD:47.0
+  pE:48.0
+  pF:50.0
+
+sample
+  name:Toms
+  fnv64a:0x39a703f4a166d8b9
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pD:45.0
+
+sample
+  name:Kick
+  fnv64a:0xc4f8277059c67d8d.8.pcm
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  p8:36.0
+
+sample
+  name:Hi-hat
+  fnv64a:0xce9ca012faec5eb4.f.pcm
+  channel:9
+  volume:96
+  program:0
+  velocity:96
+  pF:44.0
+
