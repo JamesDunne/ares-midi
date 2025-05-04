@@ -32,6 +32,7 @@ if(ACTOOL_PROGRAM)
 else()
   target_add_resource(desktop-ui "${CMAKE_CURRENT_SOURCE_DIR}/resource/AppIcon.icns")
 endif()
+target_add_resource(desktop-ui "${CMAKE_SOURCE_DIR}/ares/fc/apu/dmc.bml")
 
 function(target_install_shaders target)
   message(DEBUG "Installing shaders for target ${target}...")

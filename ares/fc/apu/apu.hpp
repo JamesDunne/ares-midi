@@ -33,6 +33,9 @@ struct APU : Thread {
     u2  noteDuty;
     u32 clocksSinceNoteOn;
 
+    u8 chanProgram;
+    u8 chanVolume;
+
     u8  lastNoteOn;
     u8  lastChan;
     u8  lastVel;
@@ -218,7 +221,7 @@ struct APU : Thread {
     auto generateMidi(MIDIEmitter&) -> void;
     MidiState m;
 
-    using generateMidiFromPeriod = function<auto (n4 period, u8& chanOut, double& noteOut, u8& velOut) -> void>;
+    using generateMidiFromPeriod = function<auto (n4 p, u8& ch_o, u8& cp_o, u8& cv_o, double& n_o, u8& v_o) -> void>;
 
     nall::map<u64, generateMidiFromPeriod> sampleDescriptors;
     nall::map<u64, nall::map<n4, bool> > samplesMissing;
@@ -291,9 +294,15 @@ struct APU : Thread {
   MIDIEmitter midiEmitter;
   u32 midiMessages;
   u32 midiClocks;
+  u32 bpsMidiMessages;
+  u32 bpsCycles;
+  u8 chanProgram[16];
+  u8 chanCC[16][128];
   auto midiInit() -> void;
   auto midiReset() -> void;
   auto generateMidi() -> void;
+  auto midiProgram(u8 chan, u8 program) -> void;
+  auto midiCC(u8 chan, u8 controller, u8 value) -> void;
 
 //unserialized:
   u16 pulseDAC[32];

@@ -47,8 +47,28 @@ auto APU::load(Node::Object parent) -> void {
 
   midi = node->append<Node::Audio::MIDI>("MIDI");
   midiEmitter = MIDIEmitter([&](u8 cmd, u8 d1, u8 d2){
+    d1 &= 0x7F;
+    d2 &= 0x7F;
+
+    // prevent sending redundant updates:
+    if ((cmd & 0xF0) == 0xB0) {
+      if (chanCC[cmd & 0x0F][d1] == d2) {
+        return;
+      }
+
+      chanCC[cmd & 0x0F][d1] = d2;
+    } else if ((cmd & 0xF0) == 0xC0) {
+      if (chanProgram[cmd & 0x0F] == d1) {
+        return;
+      }
+
+      chanProgram[cmd & 0x0F] = d1;
+    }
+
     midi->writeShort(cmd, d1, d2);
+
     midiMessages++;
+    bpsMidiMessages++;
   });
 
   midiInit();
@@ -79,6 +99,12 @@ auto APU::main() -> void {
   stream->frame(sclamp<16>(output) / 32768.0);
 
   generateMidi();
+  if (bpsCycles++ >= 1'789'773UL) {
+    // 30 bits per message (1 start bit, 8 data bit, 1 stop bit)
+    printf("midi: %5lu bps\n", bpsMidiMessages * 30UL);
+    bpsCycles = 0UL;
+    bpsMidiMessages = 0UL;
+  }
 
   tick();
 }
@@ -391,6 +417,13 @@ auto APU::midiInit() -> void {
   noise.m = {};
   dmc.m = {};
 
+  for (int c = 0; c < 16; c++) {
+    chanProgram[c] = 255;
+    for (int n = 0; n < 128; n++) {
+      chanCC[c][n] = 255;
+    }
+  }
+
   u8 dutyPCs[4] = {
     81, // sawtooth lead
     63, // synth brass 2
@@ -402,34 +435,35 @@ auto APU::midiInit() -> void {
     pulse2.m.chans[n] = n+4;
 
     midi->delay();
-    midiEmitter(0xC0 | pulse1.m.chans[n], dutyPCs[n], 0);
+    midiProgram(pulse1.m.chans[n], dutyPCs[n]);
     midi->delay();
-    midiEmitter(0xB0 | pulse1.m.chans[n], 0x07, 0); // vol
+    midiCC(pulse1.m.chans[n], 0x07, 0); // vol
     midi->delay();
-    midiEmitter(0xB0 | pulse1.m.chans[n], 0x0A, 0x28); // pan
+    midiCC(pulse1.m.chans[n], 0x0A, 0x28); // pan
 
     midi->delay();
-    midiEmitter(0xC0 | pulse2.m.chans[n], dutyPCs[n], 0);
+    midiProgram(pulse2.m.chans[n], dutyPCs[n]);
     midi->delay();
-    midiEmitter(0xB0 | pulse2.m.chans[n], 0x07, 0); // vol
+    midiCC(pulse2.m.chans[n], 0x07, 0); // vol
     midi->delay();
-    midiEmitter(0xB0 | pulse2.m.chans[n], 0x0A, 0x58); // pan
+    midiCC(pulse2.m.chans[n], 0x0A, 0x58); // pan
   }
 
   triangle.m.chans[0] = 8;
   midi->delay();
-  midiEmitter(0xC0 | triangle.m.chans[0], 33, 0); // fingered bass
+  midiProgram(triangle.m.chans[0], 33); // fingered bass
   midi->delay();
-  midiEmitter(0xB0 | triangle.m.chans[0], 0x07, 0x50); // vol
+  midiCC(triangle.m.chans[0], 0x07, 0x48); // vol
   midi->delay();
-  midiEmitter(0xB0 | triangle.m.chans[0], 0x0A, 0x40); // pan
+  midiCC(triangle.m.chans[0], 0x0A, 0x40); // pan
 
   noise.m.chans[0] = 9;
   midi->delay();
-  midiEmitter(0xC0 | noise.m.chans[0], 0, 0);
+  midiProgram(noise.m.chans[0], 0); // standard kit
   midi->delay();
-  midiEmitter(0xB0 | noise.m.chans[0], 0x07, 0x60); // vol
+  midiCC(noise.m.chans[0], 0x07, 0x60); // vol
 
+#if 0
   // DMC orchestra hit
   midi->delay();
   midiEmitter(0xC0 | 10, 55, 0); // orchestra hit
@@ -441,6 +475,7 @@ auto APU::midiInit() -> void {
   midiEmitter(0xC0 | 11, 37, 0); // slap bass 2
   midi->delay();
   midiEmitter(0xB0 | 11, 0x07, 0x60); // vol
+#endif
 
   midiMessages = 0;
 }
@@ -497,6 +532,14 @@ auto APU::MidiState::applyNoteWheel(double n) -> void {
   noteWheel = 8192 + (b * 4096.0);
   // remember actual frequency:
   noteFreq = n;
+}
+
+auto APU::midiProgram(u8 chan, u8 program) -> void {
+  midiEmitter(0xC0 | (chan & 0x0F), program & 0x7F, 0);
+}
+
+auto APU::midiCC(u8 chan, u8 controller, u8 value) -> void {
+  midiEmitter(0xB0 | (chan & 0x0F), controller & 0x7F, value & 0x7F);
 }
 
 auto APU::generateMidi() -> void {
